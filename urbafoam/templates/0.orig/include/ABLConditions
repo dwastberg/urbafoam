@@ -1,0 +1,49 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+
+
+/* Extracted from SourceFiles
+    atmBoundaryLayerInletVelocityFvPatchVectorField.C
+
+Description
+    Boundary condition specifies a atmospheric boundary layer (ABL)
+    velocity inlet profile given the friction velocity value,
+    flow direction n and direction of the parabolic coordinate z.
+
+        U = (Ustar/K) ln((z - zGround + z0)/z0)
+
+    where:
+
+        Ustar is the frictional velocity
+        K is karman s constant
+        z0 is the surface roughness lenght
+        z is the verical coordinate
+        zGround is the minumum coordinate value in z direction.
+
+    and:
+
+        Ustar = K Uref/ln((Href + z0)/z0)
+
+    where:
+
+        Uref is the reference velocity at Href
+        Href is the reference height.
+
+SourceFiles
+    atmBoundaryLayerInletVelocityFvPatchVectorField.C
+
+\*---------------------------------------------------------------------------*/
+
+Uref                 {{Uref}};
+Href                 {{Href}};
+z0                   uniform {{z0}};
+windDirection        (1 0 0);
+zDirection           (0 0 1);
+zGround              uniform {{zGround}};
+
+// ************************************************************************* //

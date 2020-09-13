@@ -1,0 +1,14 @@
+#!/bin/bash
+cd ${0%/*} || exit 1    # run from this directory
+
+rm -rf constant/extendedFeatureEdgeMesh > /dev/null 2>&1
+rm -f constant/triSurface/*.eMesh > /dev/null 2>&1
+rm -rf blockMeshBuildingsCase > /dev/null 2>&1
+find constant/polyMesh ! -name 'blockMeshDict*' -type f -exec rm -f {} + > /dev/null 2>&1
+rm -f 0/cellLevel > /dev/null 2>&1
+rm -f 0/pointLevel > /dev/null 2>&1
+rm -rf processor* > /dev/null 2>&1
+
+if [ "$1" == "-l" ]; then
+    rm log.*
+fi

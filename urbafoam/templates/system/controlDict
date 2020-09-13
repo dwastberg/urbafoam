@@ -1,0 +1,60 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     {{application}};
+
+libs ("libatmosphericModels.so");
+
+startFrom       {{startFrom}};
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime        {{endTime}};
+
+deltaT          {{deltaT}};
+
+writeControl    runTime;
+
+writeInterval   {{writeInterval}};
+
+purgeWrite      {{purgeWrite}};
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression yes;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+// adjustTimeStep  yes;
+
+// maxCo           1;
+
+functions
+{
+    {{#controlFunctions}}
+    #include "{{include}}";
+    {{/controlFunctions}}
+}
+
+// ************************************************************************* //

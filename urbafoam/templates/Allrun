@@ -1,0 +1,54 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. tools/RunFunctions
+
+[ ! -d 0 ] && cp -r 0.orig 0
+
+{{#usePotentialFoam}}
+cp 0/U_potentialFoam 0/U
+cp 0/k_potentialFoam 0/k
+{{/usePotentialFoam}}
+{{^usePotentialFoam}}
+cp 0/U_simpleFoam 0/U
+cp 0/k_simpleFoam 0/k
+{{/usePotentialFoam}}
+
+runApplication -o surfaceFeatures
+
+runApplication -o blockMesh -dict constant/polyMesh/blockMeshDict
+{{#eachCaseParallel}}
+runApplication  -o decomposePar -copyZero
+runParallel -o snappyHexMesh -overwrite
+{{/eachCaseParallel}}
+{{^eachCaseParallel}}
+runApplication -o snappyHexMesh -overwrite
+{{/eachCaseParallel}}
+
+{{#usePotentialFoam}}
+{{#eachCaseParallel}}
+runParallel -o potentialFoam
+{{/eachCaseParallel}}
+{{^eachCaseParallel}}
+runApplication -o potentialFoam
+{{/eachCaseParallel}}
+{{/usePotentialFoam}}
+
+{{#eachCaseParallel}}
+runParallel -o simpleFoam
+{{/eachCaseParallel}}
+{{^eachCaseParallel}}
+runApplication -o simpleFoam
+{{/eachCaseParallel}}
+
+{{#runSample}}
+{{#eachCaseParallel}}
+runParallel  -o postProcess -latestTime -func sampleDict -d system/sampleDict_pointcloud
+{{/eachCaseParallel}}
+{{^eachCaseParallel}}
+runApplication -o postProcess -latestTime -func sampleDict -d system/sampleDict_pointcloud
+{{/eachCaseParallel}}
+{{/runSample}}
+
+# ----------------------------------------------------------------- end-of-file
