@@ -3,7 +3,8 @@ import copy
 import json
 from math import radians
 from stl import Mesh as stlMesh
-from shapely.geometry import MultiPoint
+from shapely.geometry import MultiPoint, Polygon
+from shapely.ops import cascaded_union
 from pathlib import Path
 
 from . import MeshTypes
@@ -49,6 +50,17 @@ class Mesh:
         central_hull = projected_mesh_points.convex_hull
         return central_hull
 
+    def mesh_footprints(self,rotated = True):
+        if rotated and self.rotated_mesh is not None:
+            mesh = self.rotated_mesh
+        else:
+            mesh = self.mesh
+        footprint_polygons = []
+        for t in mesh.vectors:
+            tri = Polygon([(t[0][0], t[0][1]), (t[1][0], t[1][1]), (t[2][0], t[2][1])])
+            if tri.area > 0:
+                footprint_polygons.append(tri)
+        cascaded_union(footprint_polygons)
 
     def mesh_centerpoint(self):
         if self.bounds is None:
