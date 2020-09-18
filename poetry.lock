@@ -176,6 +176,14 @@ six = "*"
 
 [[package]]
 category = "main"
+description = "A parser for TOML-0.4.0"
+name = "pytoml"
+optional = false
+python-versions = "*"
+version = "0.1.21"
+
+[[package]]
+category = "main"
 description = "Geometric objects, predicates, and operations"
 name = "shapely"
 optional = false
@@ -217,7 +225,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "872ef49feea7be63b6d1a2f34f3729ce947cef0dc6ee36d305021fc7df479a0e"
+content-hash = "a9bed701182fa0bdf417901712a408bbc241b12579d8500e1adecc764d457826"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -302,6 +310,10 @@ pytest = [
 python-utils = [
     {file = "python-utils-2.4.0.tar.gz", hash = "sha256:f21fc09ff58ea5ebd1fd2e8ef7f63e39d456336900f26bdc9334a03a3f7d8089"},
     {file = "python_utils-2.4.0-py2.py3-none-any.whl", hash = "sha256:ebaadab29d0cb9dca0a82eab9c405f5be5125dbbff35b8f32cc433fa498dbaa7"},
+]
+pytoml = [
+    {file = "pytoml-0.1.21-py2.py3-none-any.whl", hash = "sha256:57a21e6347049f73bfb62011ff34cd72774c031b9828cb628a752225136dfc33"},
+    {file = "pytoml-0.1.21.tar.gz", hash = "sha256:8eecf7c8d0adcff3b375b09fe403407aa9b645c499e5ab8cac670ac4a35f61e7"},
 ]
 shapely = [
     {file = "Shapely-1.7.1-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:4c10f317e379cc404f8fc510cd9982d5d3e7ba13a9cfd39aa251d894c6366798"},
