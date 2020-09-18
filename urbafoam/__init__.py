@@ -3,6 +3,8 @@ __version__ = "0.1.0"
 from pathlib import Path
 import os, stat
 from enum import Enum, auto
+from shapely.geometry import Polygon
+
 import pystache
 from pystache.common import MissingTags
 
@@ -30,24 +32,28 @@ from .SnappyHexMesh import setup_snappy
 from .Controls import setup_controls
 from .InitialConditions import setup_initial_conditions
 from .Scheme import setup_scheme
-from .SamplePoints import setup_samplepoint
+from .SamplePoints import generate_sample_points, setup_samplepoint
 
 def main(building_model,wind_directions,quality, procs, out_dir):
     buildingMesh = Mesh()
     buildingMesh.load_mesh(building_model)
     out_dir = Path(out_dir).expanduser()
+    central_hull = buildingMesh.mesh_convex_hull(rotated=False)
+    sample_points = generate_sample_points(central_hull, 1, 20)
+
+    #will contain the union of the convex hulls of all the rotated meshes
+    analysis_area = Polygon()
+
     for w in wind_directions:
         case_dir = out_dir/ str(w)
-        buildingMesh.rotate_and_save_mesh(w,case_dir)
-
+        rot_matrix = buildingMesh.rotate_and_save_mesh(w,case_dir)
+        analysis_area = analysis_area.union(central_hull)
         windtunnel_data = setup_windtunnel(buildingMesh.rotated_bounds,quality,case_dir,8,0)
         snappy_data = setup_snappy(windtunnel_data,[buildingMesh],quality)
         control_data = setup_controls(quality)
         initial_condition = setup_initial_conditions(ModelType.URBAN,buildingMesh.rotated_bounds)
         scheme_data = setup_scheme()
-
-        sample_point_data = setup_samplepoint(buildingMesh.rotated_mesh, 2, [2,10])
-
+        sample_point_data = setup_samplepoint(sample_points,rot_matrix,buildingMesh.centerpoint, [2,10])
 
         case_data = {**windtunnel_data,
                      **snappy_data,
@@ -65,6 +71,7 @@ def main(building_model,wind_directions,quality, procs, out_dir):
         case_data['eachCaseParallel'] = procs > 1
 
         write_case_files(case_data,case_dir)
+
     create_run_all_cases_script(out_dir,wind_directions)
 
 def write_case_files(case_data,case_dir):
