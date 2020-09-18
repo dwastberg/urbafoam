@@ -1,3 +1,5 @@
+__version__ = "0.1.0"
+
 from pathlib import Path
 import os, stat
 from enum import Enum, auto

@@ -44,10 +44,10 @@ runApplication -o simpleFoam
 
 {{#runSample}}
 {{#eachCaseParallel}}
-runParallel  -o postProcess -latestTime -func sampleDict -d system/sampleDict_pointcloud
+runParallel  -o postProcess -latestTime -func sampleDict
 {{/eachCaseParallel}}
 {{^eachCaseParallel}}
-runApplication -o postProcess -latestTime -func sampleDict -d system/sampleDict_pointcloud
+runApplication -o postProcess -latestTime -func sampleDict
 {{/eachCaseParallel}}
 {{/runSample}}
 

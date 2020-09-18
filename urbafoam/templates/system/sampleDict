@@ -25,7 +25,8 @@ sets
 {{#pointClouds}}
     {{name}}
     {
-        type cloud;
+        type points;
+        ordered false;
         axis xyz;
         points {{samplePoints}}
     }
