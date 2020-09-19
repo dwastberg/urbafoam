@@ -18,7 +18,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    config = load_config(args.config,args.out_dir)
+    if args.out_dir is None:
+        out_dir = os.path.abspath(os.curdir)
+    else:
+        out_dir = os.path.abspath(os.path.expanduser(args.out_dir))
+    config = load_config(args.config,out_dir)
 
     if args.wind_directions is not None:
         wind_directions = args.wind_directions.split(',')
