@@ -1,9 +1,9 @@
 __version__ = "0.1.0"
 
 from pathlib import Path
-import os, stat
+import os
 from enum import Enum, auto
-from shapely.geometry import Polygon
+import numpy as np
 
 import pystache
 from pystache.common import MissingTags
@@ -33,27 +33,26 @@ from .Controls import setup_controls
 from .InitialConditions import setup_initial_conditions
 from .Scheme import setup_scheme
 from .SamplePoints import generate_sample_points, setup_samplepoint
+from .Config import save_config_file, get_or_update_config
 
-def main(building_model,wind_directions,quality, procs, out_dir):
+def main(building_model,wind_directions,quality, procs, out_dir, config):
     buildingMesh = Mesh()
     buildingMesh.load_mesh(building_model)
     out_dir = Path(out_dir).expanduser()
     central_hull = buildingMesh.mesh_convex_hull(rotated=False)
     sample_points = generate_sample_points(central_hull, 1, 20)
-
-    #will contain the union of the convex hulls of all the rotated meshes
-    analysis_area = Polygon()
+    np.savetxt(out_dir / "sample_points.txt", sample_points)
+    sampling_heights = get_or_update_config(config,"urbafoam.postProcess","sampleHeights",[2,10])
 
     for w in wind_directions:
         case_dir = out_dir/ str(w)
         rot_matrix = buildingMesh.rotate_and_save_mesh(w,case_dir)
-        analysis_area = analysis_area.union(central_hull)
-        windtunnel_data = setup_windtunnel(buildingMesh.rotated_bounds,quality,case_dir,8,0)
-        snappy_data = setup_snappy(windtunnel_data,[buildingMesh],quality)
-        control_data = setup_controls(quality)
-        initial_condition = setup_initial_conditions(ModelType.URBAN,buildingMesh.rotated_bounds)
-        scheme_data = setup_scheme()
-        sample_point_data = setup_samplepoint(sample_points,rot_matrix,buildingMesh.centerpoint, [2,10])
+        windtunnel_data = setup_windtunnel(config, buildingMesh.rotated_bounds,quality,case_dir,8,0)
+        snappy_data = setup_snappy(config,windtunnel_data,[buildingMesh],quality)
+        control_data = setup_controls(config, quality)
+        initial_condition = setup_initial_conditions(config,ModelType.URBAN,buildingMesh.rotated_bounds)
+        scheme_data = setup_scheme(config)
+        sample_point_data = setup_samplepoint(sample_points,rot_matrix,buildingMesh.centerpoint, sampling_heights)
 
         case_data = {**windtunnel_data,
                      **snappy_data,
@@ -72,6 +71,7 @@ def main(building_model,wind_directions,quality, procs, out_dir):
 
         write_case_files(case_data,case_dir)
 
+    save_config_file(out_dir,config)
     create_run_all_cases_script(out_dir,wind_directions)
 
 def write_case_files(case_data,case_dir):

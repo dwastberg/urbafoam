@@ -69,7 +69,7 @@ castellatedMeshControls
       {{#buildingModels}}
       {
         file  "{{file_basename}}.eMesh";
-        level {{feature_level}};
+        level {{featureLevel}};
       }
       {{/buildingModels}}
     );

@@ -1,42 +1,44 @@
 from . import Quality,MeshTypes
+from .Config import get_or_update_config
 import os
-def setup_snappy(windtunnel_data,building_models,quality):
+def setup_snappy(config,windtunnel_data,building_models,quality):
+    config_group = "urbafoam.snappy"
     snappy_data = {}
     if quality == Quality.QUICK:
-        verticalRefinementLevel = 2
-        insideRefinementLevel = 2
-        verticalCentralRefinement = '((3 4) (10 2))'
-        nCellsBetweenLevels = 2
-        nSurfaceLayers = 2
-        includedAngle = 150
+        verticalRefinementLevel = get_or_update_config(config,config_group,"verticalDomainRefinement",2)
+        insideRefinementLevel = get_or_update_config(config,config_group,"CentralRefinement",2)
+        verticalCentralRefinement = get_or_update_config(config,config_group,"verticalCentralRefinement",[4,2])
+        verticalCentralRefinement = f'((3 {verticalCentralRefinement[0]}) (12 {verticalCentralRefinement[1]}))'
+        nCellsBetweenLevels = get_or_update_config(config,config_group,"CellsBetweenLevels",2)
+        nSurfaceLayers = get_or_update_config(config,config_group,"SurfaceLayers",2)
+        includedAngle = get_or_update_config(config,config_group,"IncludeAngle",150)
+
+        primary_feature_level = get_or_update_config(config,config_group,"PrimaryFeatureLevel",3)
+        surrounding_feature_level = get_or_update_config(config,config_group,"SurroundingFeatureLevel",3)
+        primary_model_refinement_level = get_or_update_config(config,config_group,"PrimaryModelRefinementLevel",'(3 3)')
+        surrounding_model_refinement_level = get_or_update_config(config,config_group,"SurroundingModelRefinementLevel",'(2 2)')
 
     elif quality == Quality.NORMAL:
-        verticalRefinementLevel = 2
-        insideRefinementLevel = 3
-        verticalCentralRefinement = '((3 5) (10 3))'
-        nCellsBetweenLevels = 3
-        nSurfaceLayers = 3
-        includedAngle = 170
+        verticalRefinementLevel = get_or_update_config(config, config_group, "verticalDomainRefinement", 2)
+        insideRefinementLevel = get_or_update_config(config, config_group, "CentralRefinement", 3)
+        verticalCentralRefinement = get_or_update_config(config, config_group, "verticalCentralRefinement", [5, 3])
+        verticalCentralRefinement = f'((3 {verticalCentralRefinement[0]}) (12 {verticalCentralRefinement[1]}))'
+        nCellsBetweenLevels = get_or_update_config(config, config_group, "CellsBetweenLevels", 3)
+        nSurfaceLayers = get_or_update_config(config, config_group, "SurfaceLayers", 3)
+        includedAngle = get_or_update_config(config, config_group, "IncludeAngle", 170)
+
+        primary_feature_level = get_or_update_config(config, config_group, "PrimaryFeatureLevel", 5)
+        surrounding_feature_level = get_or_update_config(config, config_group, "SurroundingFeatureLevel", 3)
+        primary_model_refinement_level = get_or_update_config(config,config_group,"PrimaryModelRefinementLevel",'(3 3)')
+        surrounding_model_refinement_level = get_or_update_config(config,config_group,"SurroundingModelRefinementLevel",'(2 3)')
+
 
     snappy_data['buildingModels'] = []
     analysis_bounds = None
     for b in building_models:
-        if quality == Quality.QUICK:
-            if b.type == MeshTypes.PRIMARY:
-                feature_level = "4"
-                refinementLevel = "(3 3)"
-            else:
-                feature_level = "3"
-                refinementLevel = "3"
-        elif quality == Quality.NORMAL:
-            # feature_level = "((1 4) (3 3))"
-            if b.type == MeshTypes.PRIMARY:
-                feature_level = "5"
-                refinementLevel = "(3 3)"
-            else:
-                feature_level = "3"
-                refinementLevel = "(2 3)"
         if b.type == MeshTypes.PRIMARY:
+            feature_level = primary_feature_level
+            refinementLevel = primary_model_refinement_level
             if analysis_bounds == None:
                 analysis_bounds = b.rotated_bounds
             else:
@@ -46,12 +48,16 @@ def setup_snappy(windtunnel_data,building_models,quality):
                 analysis_bounds[1][1] = max(analysis_bounds[1][1], b.rotated_bounds[1][1])
                 analysis_bounds[2][0] = min(analysis_bounds[2][0], b.rotated_bounds[2][0])
                 analysis_bounds[2][1] = max(analysis_bounds[2][1], b.rotated_bounds[2][1])
+        elif b.type==MeshTypes.SURROUNDING:
+            feature_level = surrounding_feature_level
+            refinementLevel = surrounding_model_refinement_level
+
         snappy_data['buildingModels'].append({
             'name': b.name.replace(' ', '_'),
             'filename': b.file_name,
             'file_basename': os.path.splitext(b.file_name)[0],
             'includedAngle': includedAngle,
-            'feature_level': feature_level,
+            'featureLevel': feature_level,
             'refinementLevel': refinementLevel
         })
 

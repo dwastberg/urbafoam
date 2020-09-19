@@ -1,9 +1,12 @@
 from math import ceil
 from ofblockmeshdicthelper import BlockMeshDict, Vertex, SimpleGrading
 from . import Quality
+from .Config import get_or_update_config
 
-def setup_windtunnel(primary_bounds, quality, case_dir, z_grading=1, minZ=None):
-    cell_size = 15
+def setup_windtunnel(config, primary_bounds, quality, case_dir, z_grading=1, minZ = None):
+    config_group = "urbafoam.windtunnel"
+    cell_size = get_or_update_config(config,config_group,"cell_size",15)
+    z_grading = get_or_update_config(config,config_group,"z_grading",z_grading)
     min_x = primary_bounds[0][0]
     max_x = primary_bounds[0][1]
     min_y = primary_bounds[1][0]

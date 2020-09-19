@@ -1,9 +1,11 @@
 from . import ModelType
 from .windProfile import turbulenceConstants
+from .Config import get_or_update_config
 
-def setup_initial_conditions(model_type,bounds):
-    refSpeed = 6
-    Href = 30
+def setup_initial_conditions(config,model_type,bounds):
+    config_group = "urbafoam.initalConditions"
+    refSpeed = get_or_update_config(config,config_group,"Uref",10)
+    Href = get_or_update_config(config,config_group,"Href",30)
     Zref = 10
     z0ref = 0.1
 
