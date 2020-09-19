@@ -1,17 +1,17 @@
-import os
 import copy
 import json
+import os
 from math import radians
-from stl import Mesh as stlMesh
+
 from shapely.geometry import MultiPoint, Polygon
 from shapely.ops import cascaded_union
-from pathlib import Path
+from stl import Mesh as stlMesh
 
 from . import MeshTypes
 
 
 class Mesh:
-    def __init__(self, mesh_type=MeshTypes.PRIMARY, offset=[0,0,0]):
+    def __init__(self, mesh_type=MeshTypes.PRIMARY, offset=[0, 0, 0]):
         self.file_name = None
         self.name = None
         self.mesh = None
@@ -41,7 +41,7 @@ class Mesh:
         max_bb = (mesh.x.max(), mesh.y.max(), mesh.z.max())
         return list(zip(min_bb, max_bb))
 
-    def mesh_convex_hull(self, rotated = True):
+    def mesh_convex_hull(self, rotated=True):
         if rotated and self.rotated_mesh is not None:
             mesh = self.rotated_mesh
         else:
@@ -50,7 +50,7 @@ class Mesh:
         central_hull = projected_mesh_points.convex_hull
         return central_hull
 
-    def mesh_footprints(self,rotated = True):
+    def mesh_footprints(self, rotated=True):
         if rotated and self.rotated_mesh is not None:
             mesh = self.rotated_mesh
         else:
@@ -75,7 +75,7 @@ class Mesh:
             return [min_x + ((max_x - min_x) / 2), min_y + ((max_y - min_y) / 2), min_z]
 
     def rotate_mesh(self, rotation):
-        self.rotation = rotation #270 - wind_direction
+        self.rotation = rotation  # 270 - wind_direction
         self.rotated_mesh = copy.deepcopy(self.mesh)
         self.rotated_mesh.rotate([0, 0, 1], radians(self.rotation), point=self.centerpoint)
 
@@ -90,6 +90,7 @@ class Mesh:
             json.dump({"rot_matrix": rotation_matrix.tolist(), "centerpoint": list(map(float, self.centerpoint)),
                        'offset': self.offset}, f)
         return rotation_matrix
+
 
 def _read_stl(stl_file):
     return stlMesh.from_file(stl_file)

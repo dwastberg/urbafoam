@@ -1,5 +1,5 @@
-from shapely.geometry import MultiPoint, mapping
 import numpy as np
+from shapely.geometry import MultiPoint, mapping
 
 
 def setup_samplepoint(sample_points, rotation_matrix, centerpoint, heights):

@@ -1,5 +1,6 @@
-import toml
 from pathlib import Path
+
+import toml
 
 
 def load_config(config_file, out_dir):
@@ -13,6 +14,7 @@ def load_config(config_file, out_dir):
             config = toml.load(src)
     return config
 
+
 def merge_configs(config, config_file):
     with open(config_file) as src:
         config_update = toml.load(src)
@@ -21,7 +23,7 @@ def merge_configs(config, config_file):
 
 
 def save_config_file(out_dir, config):
-    with open(out_dir/'urbafoam.toml','w') as dst:
+    with open(out_dir / 'urbafoam.toml', 'w') as dst:
         toml.dump(config, dst)
 
 
@@ -33,9 +35,7 @@ def get_or_update_config(config, group, key, update_value, overwrite=False):
         cfg_group = config[group]
     else:
         cfg_group = config
-    value = cfg_group.get(key,None)
+    value = cfg_group.get(key, None)
     if value is None or overwrite is True:
-        cfg_group[key]=update_value
+        cfg_group[key] = update_value
     return cfg_group[key]
-
-
