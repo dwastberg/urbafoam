@@ -13,6 +13,12 @@ def load_config(config_file, out_dir):
             config = toml.load(src)
     return config
 
+def merge_configs(config, config_file):
+    with open(config_file) as src:
+        config_update = toml.load(src)
+    config.update(config_file)
+    return config
+
 
 def save_config_file(out_dir, config):
     with open(out_dir/'urbafoam.toml','w') as dst:
