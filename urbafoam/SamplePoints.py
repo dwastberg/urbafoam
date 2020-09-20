@@ -13,7 +13,7 @@ def setup_samplepoint(sample_points, rotation_matrix, centerpoint, heights):
     return sample_data
 
 
-def generate_sample_points(sample_area, spacing, buffering=10):
+def generate_sample_points(sample_area, spacing):
     sample_bound = sample_area.bounds
     x = np.arange(sample_bound[0] - spacing, sample_bound[2] + spacing, spacing)
     y = np.arange(sample_bound[1] - spacing, sample_bound[3] + spacing, spacing)

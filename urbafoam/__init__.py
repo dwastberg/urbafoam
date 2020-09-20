@@ -40,7 +40,8 @@ def main(building_model,wind_directions,quality, procs, out_dir, config):
     buildingMesh.load_mesh(building_model)
     out_dir = Path(out_dir).expanduser()
     central_hull = buildingMesh.mesh_convex_hull(rotated=False)
-    sample_points = generate_sample_points(central_hull, 1, 20)
+    central_hull = central_hull.buffer(20)
+    sample_points = generate_sample_points(central_hull, 1)
     np.savetxt(out_dir / "sample_points.txt", sample_points)
     sampling_heights = get_or_update_config(config,"urbafoam.postProcess","sampleHeights",[2,10])
 
