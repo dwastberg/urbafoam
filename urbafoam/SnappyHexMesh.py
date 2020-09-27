@@ -1,7 +1,7 @@
 import os
 
 from . import Quality, MeshTypes
-from .Config import get_or_update_config
+from .Config import get_or_update_config, get_value
 
 
 def setup_snappy(config, windtunnel_data, building_models, quality):
@@ -16,10 +16,10 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
         nSurfaceLayers = get_or_update_config(config, config_group, "SurfaceLayers", 2)
         includedAngle = get_or_update_config(config, config_group, "IncludeAngle", 150)
 
-        primary_feature_level = get_or_update_config(config, config_group, "PrimaryFeatureLevel", 3)
+        primary_feature_level = get_or_update_config(config, config_group, "PrimaryFeatureLevel", 4)
         surrounding_feature_level = get_or_update_config(config, config_group, "SurroundingFeatureLevel", 3)
         primary_model_refinement_level = get_or_update_config(config, config_group, "PrimaryModelRefinementLevel",
-                                                              '(3 3)')
+                                                              '(2 4)')
         surrounding_model_refinement_level = get_or_update_config(config, config_group,
                                                                   "SurroundingModelRefinementLevel", '(2 2)')
 
@@ -76,10 +76,12 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
     snappy_data['nCellsBetweenLevels'] = nCellsBetweenLevels
     snappy_data['nSurfaceLayers'] = nSurfaceLayers
 
-    snappy_data['analysis_minx'] = analysis_bounds[0][0] - windtunnel_data['cell_size']
-    snappy_data['analysis_maxx'] = analysis_bounds[0][1] + windtunnel_data['cell_size']
-    snappy_data['analysis_miny'] = analysis_bounds[1][0] - windtunnel_data['cell_size']
-    snappy_data['analysis_maxy'] = analysis_bounds[1][1] + windtunnel_data['cell_size']
+    analysis_area_buffer = get_value(config,"urbafoam.postprocess","sampleBuffer")
+    analysis_area_buffer *= 1.5
+    snappy_data['analysis_minx'] = analysis_bounds[0][0] - analysis_area_buffer
+    snappy_data['analysis_maxx'] = analysis_bounds[0][1] + analysis_area_buffer
+    snappy_data['analysis_miny'] = analysis_bounds[1][0] - analysis_area_buffer
+    snappy_data['analysis_maxy'] = analysis_bounds[1][1] + analysis_area_buffer
     snappy_data['analysis_minz'] = analysis_bounds[2][0]
     snappy_data['analysis_maxz'] = analysis_bounds[2][1]
     snappy_data['thirdheight'] = thirdheight

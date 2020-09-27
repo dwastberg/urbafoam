@@ -33,3 +33,5 @@ def point_array_to_sample_format(samplePoints):
     sampleText += '\n'.join(samplePoints_str)
     sampleText += ');\n'
     return sampleText
+
+

@@ -1,4 +1,4 @@
-from urbafoam.PostProcess import write_oriented_data
+from urbafoam.PostProcess import write_oriented_data, find_used_sample_points
 from urbafoam.Config import load_config, get_value
 from pathlib import Path
 
@@ -16,5 +16,6 @@ if __name__=='__main__':
 
     for w in wind_directions:
         write_oriented_data(case_dir/str(w),'samplePoints_2m')
+    find_used_sample_points(case_dir,'samplePoints_2m',1,wind_directions)
 
 

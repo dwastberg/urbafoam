@@ -2,6 +2,7 @@ import copy
 import json
 import os
 from math import radians
+import numpy as np
 
 from shapely.geometry import MultiPoint, Polygon
 from shapely.ops import cascaded_union
@@ -46,7 +47,9 @@ class Mesh:
             mesh = self.rotated_mesh
         else:
             mesh = self.mesh
+
         projected_mesh_points = MultiPoint(list(zip(mesh.x.flatten(), mesh.y.flatten())))
+        np.savetxt('meshpoints.txt',np.array(projected_mesh_points))
         central_hull = projected_mesh_points.convex_hull
         return central_hull
 
