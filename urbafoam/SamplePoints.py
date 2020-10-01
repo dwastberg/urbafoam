@@ -8,7 +8,7 @@ def setup_samplepoint(sample_points, rotation_matrix, centerpoint, heights):
                    'pointClouds': []}
     for h in heights:
         name = f'samplePoints_{h}m'
-        pts_string = point_array_to_sample_format(rotated_points + h)
+        pts_string = point_array_to_sample_format(rotated_points + np.array([0,0,h]))
         sample_data['pointClouds'].append({'name': name, 'samplePoints': pts_string})
     return sample_data
 

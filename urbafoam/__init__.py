@@ -39,10 +39,12 @@ def main(building_model,wind_directions,quality, procs, out_dir, config):
     buildingMesh = Mesh()
     buildingMesh.load_mesh(building_model)
     out_dir = Path(out_dir).expanduser()
+    out_dir.mkdir(exist_ok=True,parents=True)
     sample_buffer = get_or_update_config(config,"urbafoam.postprocess", "sampleBuffer", 10)
+    sample_spacing = get_or_update_config(config,"urbafoam.postprocess", "sampleSpacing", 1.0)
     central_hull = buildingMesh.mesh_convex_hull(rotated=False)
     central_hull = central_hull.buffer(sample_buffer)
-    sample_points = generate_sample_points(central_hull, 1)
+    sample_points = generate_sample_points(central_hull, sample_spacing)
     np.savetxt(out_dir / "sample_points.txt", sample_points)
     sampling_heights = get_or_update_config(config,"urbafoam.postProcess","sampleHeights",[2,10])
 
@@ -54,7 +56,7 @@ def main(building_model,wind_directions,quality, procs, out_dir, config):
         control_data = setup_controls(config, quality)
         initial_condition = setup_initial_conditions(config,ModelType.URBAN,buildingMesh.rotated_bounds)
         scheme_data = setup_scheme(config)
-        sample_point_data = setup_samplepoint(sample_points,rot_matrix,buildingMesh.centerpoint, sampling_heights)
+        sample_point_data = setup_samplepoint(sample_points,rot_matrix,buildingMesh.centerpoint, sampling_heights,w)
 
         case_data = {**windtunnel_data,
                      **snappy_data,

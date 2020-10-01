@@ -4,7 +4,7 @@ import sys
 
 import numpy as np
 from shapely.geometry import Point, MultiPoint
-from scipy.interpolate import NearestNDInterpolator
+from scipy.interpolate import NearestNDInterpolator, LinearNDInterpolator
 from shapely.strtree import STRtree
 
 def get_latest_time(times):
@@ -58,7 +58,7 @@ def write_oriented_data(case_dir,sample_name,field='U'):
 def find_used_sample_points(case_dir,sample_name,spacing,wind_directions,field='U'):
     base_points = np.loadtxt(case_dir/"sample_points.txt")
     base_points = base_points[:,:2]
-    buffered_base_points = [(p,Point(p).buffer(spacing/2)) for p in base_points]
+    buffered_base_points = [(p,Point(p).buffer(spacing*0.45)) for p in base_points]
     #rtree = STRtree(buffered_base_points)
     filename = f"{sample_name}_{field}.xyz"
     kept_sample_points = []
@@ -85,9 +85,41 @@ def find_used_sample_points(case_dir,sample_name,spacing,wind_directions,field='
 
 
 
-def normalize_oriented_data(case_dir,sample_name,field='U'):
-    base_points = np.loadtxt(case_dir/'..'/"sample_points.txt")
-    data = orient_sample_date(case_dir, sample_name, field)
+def normalize_oriented_data(case_dir,wind_directions,sample_name,field='U'):
+    base_points = np.loadtxt(case_dir/f"{sample_name}_sample_points.txt")
+    base_points_hull = MultiPoint(base_points).convex_hull
+    interpZ_done = False
+    normalized_data = []
+    for w in wind_directions:
+        data = orient_sample_date(case_dir/str(w), sample_name, field)
+        #points_in_hull = [Point(p).intersects(base_points_hull) for p in data[:,:2]]
+        #data = data[points_in_hull]
+        #reduce data to just point and value
+        points = data[:,:2]
+
+        pointsZ = data[:,2]
+        if field == 'U':
+            data = data[:,6]
+        elif field == 'p':
+            data = data[:, 4]
+        else:
+            data = data[:, 3]
+        if not interpZ_done:
+            interpZ = NearestNDInterpolator(points, pointsZ)
+            base_Z = interpZ(base_points)
+            interpZ_done = True
+        interp = LinearNDInterpolator(points,data)
+        base_data = interp(base_points)
+        #LinearND only works on points inside convex hull. Use this to set value on points
+        #outside convex hull
+        interp = NearestNDInterpolator(points,data)
+        NN_base_data = interp(base_points)
+        missing_data = np.isnan(base_data)
+        base_data[missing_data] = NN_base_data[missing_data]
+
+        normalized_data.append(base_data)
+    base_points = np.hstack((base_points,base_Z.reshape((-1,1))))
+    pass
     
 
 
