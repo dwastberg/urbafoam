@@ -55,11 +55,10 @@ def write_oriented_data(case_dir,sample_name,field='U'):
     filename = f"{sample_name}_{field}.xyz"
     np.savetxt(case_dir / filename,data)
 
-def find_used_sample_points(case_dir,sample_name,spacing,wind_directions,field='U'):
+def find_sample_points_with_data(case_dir, sample_name, spacing, wind_directions, field='U', write=False):
     base_points = np.loadtxt(case_dir/"sample_points.txt")
     base_points = base_points[:,:2]
     buffered_base_points = [(p,Point(p).buffer(spacing*0.45)) for p in base_points]
-    #rtree = STRtree(buffered_base_points)
     filename = f"{sample_name}_{field}.xyz"
     kept_sample_points = []
 
@@ -79,14 +78,16 @@ def find_used_sample_points(case_dir,sample_name,spacing,wind_directions,field='
         for i in kept_sample_index[::-1]:
             buffered_base_points.pop(i)
     kept_sample_points=np.array(kept_sample_points)
-    np.savetxt(case_dir/f"{sample_name}_sample_points.txt",kept_sample_points)
+    if write:
+        np.savetxt(case_dir/f"{sample_name}_sample_points.txt",kept_sample_points)
+    return kept_sample_points
 
 
 
 
 
-def normalize_oriented_data(case_dir,wind_directions,sample_name,field='U'):
-    base_points = np.loadtxt(case_dir/f"{sample_name}_sample_points.txt")
+def normalize_oriented_data(base_points, case_dir,wind_directions,sample_name,field='U'):
+    #base_points = np.loadtxt(case_dir/f"{sample_name}_sample_points.txt")
     base_points_hull = MultiPoint(base_points).convex_hull
     interpZ_done = False
     normalized_data = []
@@ -110,6 +111,7 @@ def normalize_oriented_data(case_dir,wind_directions,sample_name,field='U'):
             interpZ_done = True
         interp = LinearNDInterpolator(points,data)
         base_data = interp(base_points)
+
         #LinearND only works on points inside convex hull. Use this to set value on points
         #outside convex hull
         interp = NearestNDInterpolator(points,data)
@@ -119,7 +121,7 @@ def normalize_oriented_data(case_dir,wind_directions,sample_name,field='U'):
 
         normalized_data.append(base_data)
     base_points = np.hstack((base_points,base_Z.reshape((-1,1))))
-    pass
+    return (base_points,normalized_data)
     
 
 
