@@ -49,7 +49,6 @@ class Mesh:
             mesh = self.mesh
 
         projected_mesh_points = MultiPoint(list(zip(mesh.x.flatten(), mesh.y.flatten())))
-        np.savetxt('meshpoints.txt',np.array(projected_mesh_points))
         central_hull = projected_mesh_points.convex_hull
         return central_hull
 

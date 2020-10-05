@@ -2,7 +2,7 @@
 name = "urbafoam"
 version = "0.1.0"
 description = ""
-authors = ["Dag Wastberg<dwastberg@gmail.com>"]
+authors = ["Dag Wästberg <dwastberg@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -18,6 +18,10 @@ click = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+
+
+[tool.poetry.scripts]
+urbafoam = 'urbafoam:cli'
 
 [build-system]
 requires = ["poetry>=0.12"]

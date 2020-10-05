@@ -63,7 +63,8 @@ def find_sample_points_with_data(case_dir, sample_name, spacing, wind_directions
     kept_sample_points = []
 
     for w in wind_directions:
-        case_data_points = np.loadtxt(case_dir/str(w)/filename)
+        #case_data_points = np.loadtxt(case_dir/str(w)/filename)
+        case_data_points = orient_sample_date(case_dir/str(w),sample_name,field)
         #case_data_points_2D = [Point(p) for p in case_data_points[:,:2]]
         case_data_points_2D = MultiPoint(case_data_points[:,:2])
         rtree = STRtree(case_data_points_2D)
