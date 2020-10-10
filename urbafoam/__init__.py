@@ -109,15 +109,19 @@ def setup(quality, config, wind_dir, model, p, outdir):
 
 @cli.command()
 @click.option('-c', '--config', type=click.Path())
-@click.argument('outdir', type=click.Path())
-def postprocess(config, outdir):
+@click.argument('casedir', type=click.Path())
+def postprocess(config, casedir):
     """PostProcess and output CFD results from Urbafoam run"""
     print("postprocess")
-    casedir = Path(outdir).expanduser()
+    casedir = Path(casedir).expanduser()
+    (casedir / 'results').mkdir(exist_ok=True)
     config = load_config(config, casedir)
     wind_directions = get_value(config, "urbafoam.wind", "wind_directions")
     sample_spacing = get_value(config, "urbafoam.postprocess", "sampleSpacing")
-    WRITE = get_or_update_config(config, "urbafoam.debug", "write_postProcess", True)
+    Uref = get_value(config,"urbafoam.initalconditions","Uref")
+    get_speedup = get_or_update_config(config, "urbafoam.postprocess", "calcSpeedup", True)
+    scale_vectors = get_or_update_config(config, "urbafoam.postprocess", "scaleVectorsBy", 2.0)
+    WRITE = get_or_update_config(config, "urbafoam.debug", "write_postProcess", False)
     if WRITE:
         for w in wind_directions:
             write_oriented_data(casedir / str(w), 'samplePoints_2m')
@@ -129,14 +133,15 @@ def postprocess(config, outdir):
 
         sample_points_with_data = find_sample_points_with_data(casedir, sample_name, sample_spacing, wind_directions,
                                                            write=WRITE)
-        base_points, normalized_data = normalize_oriented_data(sample_points_with_data, casedir, wind_directions,
+        base_points, normalized_data = normalize_oriented_data(sample_points_with_data, casedir, wind_directions, Uref,
                                                              sample_name)
         normalized_data_collection[sample_name] = (base_points, normalized_data)
 
-        writeWindPoints(base_points, normalized_data, wind_directions, casedir / f'{sample_name}_U_pts.shp', format='shp')
+        writeWindPoints(base_points, normalized_data, wind_directions, casedir / 'results' / f'{sample_name}_U_pts.json', format='geojson')
         for w in wind_directions:
-            data = orient_sample_date(casedir / str(w), 'samplePoints_2m', field='U')
-            writeWindVectors(data, casedir / f"windVectors_{sample_name}_{w}.shp", format='shp')
+            data = orient_sample_date(casedir / str(w), sample_name, field='U', Uref=Uref)
+            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors, format='geojson')
+    save_config_file(casedir, config)
 
 
 def setupCase(building_model, quality, procs, out_dir, config):
