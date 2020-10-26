@@ -1,11 +1,6 @@
 import fiona
 import numpy as np
 def writeWindPoints(basepoints,data,wind_dirs,out_file,format = 'csv'):
-    format = format.replace('.','')
-    format = format.lower()
-    known_formats = ('csv','json','geojson','shp','shape')
-    if format not in known_formats:
-        raise ValueError(f'output type {format} not recognized. Must be one of {known_formats}')
 
     if format == 'csv':
         csv_dst = open(out_file,'w')

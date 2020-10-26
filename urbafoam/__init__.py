@@ -109,8 +109,9 @@ def setup(quality, config, wind_dir, model, p, outdir):
 
 @cli.command()
 @click.option('-c', '--config', type=click.Path())
+@click.option('-f', '--format')
 @click.argument('casedir', type=click.Path())
-def postprocess(config, casedir):
+def postprocess(config, format, casedir):
     """PostProcess and output CFD results from Urbafoam run"""
     print("postprocess")
     casedir = Path(casedir).expanduser()
@@ -120,7 +121,30 @@ def postprocess(config, casedir):
     sample_spacing = get_value(config, "urbafoam.postprocess", "sampleSpacing")
     Uref = get_value(config,"urbafoam.initalconditions","Uref")
     get_speedup = get_or_update_config(config, "urbafoam.postprocess", "calcSpeedup", True)
+
     scale_vectors = get_or_update_config(config, "urbafoam.postprocess", "scaleVectorsBy", 2.0)
+
+    known_formats = ('csv', 'json', 'geojson', 'shp', 'shape')
+    if format is not None:
+        format = format.replace('.', '')
+        format = format.lower()
+        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat",format, overwrite=True)
+    else:
+        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat", 'csv')
+
+
+    if format == 'csv':
+        file_ext = 'csv'
+    elif format in ('shp','shape'):
+        file_ext = 'shp'
+    elif format in ('json','geojson'):
+        file_ext = 'json'
+    else:
+        raise ValueError(f'output type {format} not recognized. Must be one of {known_formats}')
+
+
+
+
     WRITE = get_or_update_config(config, "urbafoam.debug", "write_postProcess", False)
     if WRITE:
         for w in wind_directions:
@@ -137,10 +161,10 @@ def postprocess(config, casedir):
                                                              sample_name)
         normalized_data_collection[sample_name] = (base_points, normalized_data)
 
-        writeWindPoints(base_points, normalized_data, wind_directions, casedir / 'results' / f'{sample_name}_U_pts.json', format='geojson')
+        writeWindPoints(base_points, normalized_data, wind_directions, casedir / 'results' / f'{sample_name}_U_pts.json', format=format)
         for w in wind_directions:
             data = orient_sample_date(casedir / str(w), sample_name, field='U', Uref=Uref)
-            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors, format='geojson')
+            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors, format=format)
     save_config_file(casedir, config)
 
 
@@ -151,6 +175,7 @@ def setupCase(building_model, quality, procs, out_dir, config):
     out_dir.mkdir(exist_ok=True, parents=True)
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
     sample_spacing = get_or_update_config(config, "urbafoam.postprocess", "sampleSpacing", 1.0)
+
     central_hull = buildingMesh.mesh_convex_hull(rotated=False)
     central_hull = central_hull.buffer(sample_buffer)
     sample_points = generate_sample_points(central_hull, sample_spacing)
@@ -211,6 +236,7 @@ def create_run_all_cases_script(out_dir, wind_directions):
     out_string = "#!/bin/sh\n\n"
 
     for n, w in enumerate(wind_directions):
+        out_string += f"{str(w)}/Allclean -l;\n"
         out_string += f"{str(w)}/Allrun;\n"
 
     with open(out_dir / "RunAllCases", 'w', newline='\n') as f:
