@@ -2,7 +2,7 @@ import fiona
 import numpy as np
 
 
-def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv'):
+def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv', offset=None):
     if format == 'csv':
         csv_dst = open(out_file, 'w')
         header = "X,Y,Z"
@@ -23,6 +23,11 @@ def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv'):
             properties.append(prop)
             schema['properties'][prop] = 'float'
         fiona_dst = fiona.open(out_file, 'w', driver=driver, schema=schema)
+    if offset is not None:
+        assert len(offset)==3,"Offset must have a length of 3"
+        basepoints = basepoints.copy()
+        basepoints += offset
+
     for pt, d in zip(basepoints, zip(*data)):
         if format == 'csv':
             pt_string = ','.join(map(str, pt))
@@ -42,10 +47,16 @@ def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv'):
         fiona_dst.close()
 
 
-def writeWindVectors(data, out_file, scale=1.0, format='csv'):
+def writeWindVectors(data, out_file, scale=1.0, format='csv', offset=None):
     format = format.replace('.', '')
     format = format.lower()
     known_formats = ('csv', 'json', 'geojson', 'shp', 'shape')
+    if offset is not None:
+        assert len(offset) == 3, "Offset must have a length of 3"
+        offset = np.array(offset)
+        data[:, :3] += offset #start points
+        data[:, 3:6] += offset #end points
+
     if scale != 1:
         start_point, end_point = data[:, :3], data[:, 3:6]
         dir_vector = end_point - start_point

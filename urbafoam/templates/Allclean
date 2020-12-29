@@ -8,6 +8,8 @@ find constant/polyMesh ! -name 'blockMeshDict*' -type f -exec rm -f {} + > /dev/
 rm -f 0/cellLevel > /dev/null 2>&1
 rm -f 0/pointLevel > /dev/null 2>&1
 rm -rf processor* > /dev/null 2>&1
+rm -rf postProcessing > /dev/null 2>&1
+
 
 if [ "$1" == "-l" ]; then
     rm log.*

@@ -7,7 +7,7 @@ from pystache.common import MissingTags
 
 from .BlockMesh import setup_windtunnel
 from .BuildingMesh import BuildingMesh
-from .Config import save_config_file, get_or_update_config, get_value
+from .Config import save_config_file, get_or_update_config, get_value, set_value
 from .Controls import setup_controls
 from .DataConversion import make_building_mesh
 from .Enums import ModelType, Quality
@@ -17,7 +17,7 @@ from .Scheme import setup_scheme
 from .SnappyHexMesh import setup_snappy
 
 
-def setupCase(building_model, quality, procs, out_dir, config):
+def setupCase(building_model, quality, procs, sample_points, out_dir, config):
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(exist_ok=True, parents=True)
 
@@ -27,16 +27,23 @@ def setupCase(building_model, quality, procs, out_dir, config):
     building_model = make_building_mesh(building_model, mesh_dir,
                                         height_attr=get_value(config, "urbafoam.models", "height_attribute"))
 
+    model_offset = get_or_update_config(config,"urbafoam.models", "offset", [0.0, 0.0, 0.0])
     buildingMesh = BuildingMesh()
-
-    buildingMesh.load_mesh(building_model,center_at_zero=True)
+    buildingMesh.load_mesh(building_model,offset=model_offset,center_at_zero=False)
+    set_value(config, "urbafoam.models", "offset", buildingMesh.offset)
 
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
-    sample_spacing = get_or_update_config(config, "urbafoam.postprocess", "sampleSpacing", 1.0)
+    if sample_points is not None:
+        sample_points = Path(sample_points).expanduser()
+        if not sample_points.is_file():
+            IOError(f"Can't find {sample_points} ")
+        sample_points = np.loadtxt(sample_points)
+    else:
+        sample_spacing = get_or_update_config(config, "urbafoam.postprocess", "sampleSpacing", 1.0)
+        central_hull = buildingMesh.mesh_convex_hull(rotated=False)
+        central_hull = central_hull.buffer(sample_buffer)
+        sample_points = generate_sample_points(central_hull, sample_spacing)
 
-    central_hull = buildingMesh.mesh_convex_hull(rotated=False)
-    central_hull = central_hull.buffer(sample_buffer)
-    sample_points = generate_sample_points(central_hull, sample_spacing)
     np.savetxt(out_dir / "sample_points.txt", sample_points)
     sampling_heights = get_or_update_config(config, "urbafoam.postProcess", "sampleHeights", [2, 10])
 

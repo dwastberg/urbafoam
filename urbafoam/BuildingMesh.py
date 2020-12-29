@@ -37,14 +37,11 @@ class BuildingMesh:
         else:
             raise IOError(f"failed to load {mesh_file}, make sure it exists and is in stl format")
         if center_at_zero:
-            self.offset = [-self.centerpoint[0],-self.centerpoint[1],0]
+            self.offset = [-self.centerpoint[0],-self.centerpoint[1],0.0]
         if min(self.offset) != 0 or max(self.offset) !=0:
             self.mesh.translate(self.offset)
             self.bounds = self.mesh_bounds()
             self.centerpoint = self.mesh_centerpoint()
-            pass
-
-
 
 
     def mesh_bounds(self, mesh=None):

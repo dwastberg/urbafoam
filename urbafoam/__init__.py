@@ -26,10 +26,11 @@ def cli():
 @click.option('-w', '--wind-dir')
 @click.option('-m', '--model', type=click.Path())
 @click.option('-e', '--height')
+@click.option('-s', '--sample-points', type=click.Path())
 @click.option('-p', type=int)
 @click.option('-c', '--config', type=click.Path())
 @click.argument('outdir', type=click.Path())
-def setup(quality, config, wind_dir, model, height, p, outdir):
+def setup(quality, config, wind_dir, model, height, sample_points, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
@@ -47,13 +48,14 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
         except:
             sys.exit(f"failed to parse wind directions {wind_dir}")
 
-    building_mesh_formats = {'stl'}
-    building_footprint_formats = {'json', 'geojson', 'shp'}
+    building_mesh_formats = {'.stl'}
+    building_footprint_formats = {'.json', '.geojson', '.shp'}
 
     if model is None:
-        primary_building_model = get_or_update_config(config, "urbafoam.models", "primaty_buildings", None)
+        primary_building_model = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
     else:
-        model_ext = model.split('.')[-1].lower()
+        model = Path(model).expanduser()
+        model_ext = model.suffix
         if model_ext not in building_mesh_formats.union(building_footprint_formats):
             sys.exit(f"{model_ext} is an unsupported filetype for buildings")
         if model_ext in building_footprint_formats:
@@ -63,10 +65,10 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
                 height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", "height")
         else:
             height_attr = None
-        primary_building_model = get_or_update_config(config, "urbafoam.models", "primaty_buildings", model, True)
+        primary_building_model = get_or_update_config(config, "urbafoam.models", "primary_buildings", str(model), True)
     assert primary_building_model is not None and os.path.isfile(
         primary_building_model), "cannot find building model %s" % model
-
+    print(primary_building_model)
     if quality is None:
         quality = get_or_update_config(config, "", "quality", 'quick')
     else:
@@ -87,8 +89,8 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
     else:
         procs = get_or_update_config(config, "urbafoam.parallel", "procs", p, overwrite=True)
 
-    outdir = get_or_update_config(config, "", "out_dir", outdir)
-    setupCase(primary_building_model, quality, procs, outdir, config)
+    outdir = get_or_update_config(config, "", "out_dir", str(outdir))
+    setupCase(primary_building_model, quality, procs, sample_points, outdir, config)
 
 
 @cli.command()
@@ -105,6 +107,7 @@ def postprocess(config, format, casedir):
     sample_spacing = get_value(config, "urbafoam.postprocess", "sampleSpacing")
     Uref = get_value(config, "urbafoam.initalconditions", "Uref")
     get_speedup = get_or_update_config(config, "urbafoam.postprocess", "calcSpeedup", True)
+    offset = get_value(config, "urbafoam.models", "offset")
 
     scale_vectors = get_or_update_config(config, "urbafoam.postprocess", "scaleVectorsBy", 2.0)
 
@@ -142,9 +145,9 @@ def postprocess(config, format, casedir):
         normalized_data_collection[sample_name] = (base_points, normalized_data)
 
         writeWindPoints(base_points, normalized_data, wind_directions,
-                        casedir / 'results' / f'{sample_name}_U_pts.json', format=format)
+                        casedir / 'results' / f'{sample_name}_U_pts.{file_ext}', format=format,offset=offset)
         for w in wind_directions:
             data = orient_sample_date(casedir / str(w), sample_name, field='U', Uref=Uref)
-            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors,
-                             format=format)
+            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.{file_ext}", scale=scale_vectors,
+                             format=format,offset=offset)
     save_config_file(casedir, config)
