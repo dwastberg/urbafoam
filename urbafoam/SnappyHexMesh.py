@@ -1,7 +1,7 @@
 import os
 
-from . import Quality, MeshTypes
 from .Config import get_or_update_config, get_value
+from .Enums import MeshTypes, Quality
 
 
 def setup_snappy(config, windtunnel_data, building_models, quality):

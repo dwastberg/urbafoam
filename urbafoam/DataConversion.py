@@ -3,7 +3,6 @@ from shutil import copy
 import fiona
 import trimesh.creation
 import trimesh.exchange
-
 from shapely.geometry import shape
 
 

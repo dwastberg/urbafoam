@@ -1,5 +1,5 @@
-from . import Quality
 from .Config import get_or_update_config
+from .Enums import Quality
 
 
 def setup_controls(config, quality):

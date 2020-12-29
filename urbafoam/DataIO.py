@@ -1,6 +1,8 @@
 import fiona
 import numpy as np
+
 def writeWindPoints(basepoints,data,wind_dirs,out_file,format = 'csv'):
+
 
     if format == 'csv':
         csv_dst = open(out_file,'w')

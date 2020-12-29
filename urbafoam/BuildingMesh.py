@@ -2,13 +2,12 @@ import copy
 import json
 import os
 from math import radians
-import numpy as np
 
 from shapely.geometry import MultiPoint, Polygon
 from shapely.ops import cascaded_union
 from stl import Mesh as stlMesh
 
-from . import MeshTypes
+from .Enums import MeshTypes
 
 
 class BuildingMesh:

@@ -1,5 +1,5 @@
-from . import ModelType
 from .Config import get_or_update_config
+from .Enums import ModelType
 from .windProfile import turbulenceConstants
 
 

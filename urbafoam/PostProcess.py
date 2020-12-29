@@ -3,9 +3,10 @@ import os
 import sys
 
 import numpy as np
-from shapely.geometry import Point, MultiPoint
 from scipy.interpolate import NearestNDInterpolator, LinearNDInterpolator
+from shapely.geometry import Point, MultiPoint
 from shapely.strtree import STRtree
+
 
 def get_latest_time(times):
     time_numbers = [float(t) for t in times]
