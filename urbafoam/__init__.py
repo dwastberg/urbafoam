@@ -66,6 +66,9 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
+    if outdir is None:
+        outdir=os.getcwd()
+    outdir = Path(outdir).expanduser().absolute()
     print(outdir)
     config = load_config(config, outdir)
 

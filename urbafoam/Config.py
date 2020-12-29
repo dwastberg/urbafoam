@@ -4,8 +4,6 @@ import toml
 
 
 def load_config(config_file, out_dir=None):
-    if out_dir is not None:
-        out_dir = Path(out_dir)
     config = {}
     if config_file is None and out_dir is not None:
         if (out_dir / "urbafoam.toml").is_file():
