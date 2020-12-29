@@ -4,6 +4,7 @@ import os
 import sys
 from enum import Enum, auto
 from pathlib import Path
+from shutil import copy
 
 import click
 import numpy as np
@@ -32,7 +33,7 @@ class ModelType(Enum):
     WATER = auto()
 
 
-from .Mesh import Mesh
+from .BuildingMesh import BuildingMesh
 from .BlockMesh import setup_windtunnel
 from .SnappyHexMesh import setup_snappy
 from .Controls import setup_controls
@@ -42,6 +43,7 @@ from .SamplePoints import generate_sample_points, setup_samplepoint
 from .Config import load_config, save_config_file, get_or_update_config, merge_configs, get_value
 from .PostProcess import write_oriented_data, find_sample_points_with_data, normalize_oriented_data, orient_sample_date
 from .DataIO import writeWindPoints, writeWindVectors
+from .DataConversion import make_building_mesh
 
 
 @click.group()
@@ -56,10 +58,11 @@ def cli():
 @click.option('-q', '--quality')
 @click.option('-w', '--wind-dir')
 @click.option('-m', '--model', type=click.Path())
+@click.option('-e', '--height')
 @click.option('-p', type=int)
 @click.option('-c', '--config', type=click.Path())
 @click.argument('outdir', type=click.Path())
-def setup(quality, config, wind_dir, model, p, outdir):
+def setup(quality, config, wind_dir, model, height, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
@@ -72,12 +75,24 @@ def setup(quality, config, wind_dir, model, p, outdir):
             wind_directions = [float(w.strip()) for w in wind_directions]
             get_or_update_config(config, "urbafoam.wind", "wind_directions", wind_directions, True)
         except:
-            print("failed to parse wind directions", wind_dir)
-            sys.exit(1)
+            sys.exit(f"failed to parse wind directions {wind_dir}")
+
+    building_mesh_formats = {'stl'}
+    building_footprint_formats = {'json', 'geojson', 'shp'}
 
     if model is None:
         primary_building_model = get_or_update_config(config, "urbafoam.models", "primaty_buildings", None)
     else:
+        model_ext = model.split('.')[-1].lower()
+        if model_ext not in building_mesh_formats.union(building_footprint_formats):
+            sys.exit(f"{model_ext} is an unsupported filetype for buildings")
+        if model_ext in building_footprint_formats:
+            if height is not None:
+                height_attr = get_or_update_config(config,"urbafoam.models","height_attribute",height,True)
+            else:
+                height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", "height")
+        else:
+            height_attr = None
         primary_building_model = get_or_update_config(config, "urbafoam.models", "primaty_buildings", model, True)
     assert primary_building_model is not None and os.path.isfile(
         primary_building_model), "cannot find building model %s" % model
@@ -104,7 +119,7 @@ def setup(quality, config, wind_dir, model, p, outdir):
 
     out_dir = get_or_update_config(config, "", "out_dir", outdir)
 
-    setupCase(model, quality, procs, outdir, config)
+    setupCase(primary_building_model, quality, procs, out_dir, config)
 
 
 @cli.command()
@@ -169,10 +184,22 @@ def postprocess(config, format, casedir):
 
 
 def setupCase(building_model, quality, procs, out_dir, config):
-    buildingMesh = Mesh()
-    buildingMesh.load_mesh(building_model)
+
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(exist_ok=True, parents=True)
+
+    mesh_dir = out_dir / "data" / "building_mesh"
+    mesh_dir.mkdir(exist_ok=True, parents=True)
+    building_model = Path(building_model)
+    building_model = make_building_mesh(building_model,mesh_dir,height_attr=get_value(config,"urbafoam.models","height_attribute"))
+
+
+    #building_model = copy(building_model, mesh_dir)
+
+    buildingMesh = BuildingMesh()
+
+    buildingMesh.load_mesh(building_model)
+
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
     sample_spacing = get_or_update_config(config, "urbafoam.postprocess", "sampleSpacing", 1.0)
 

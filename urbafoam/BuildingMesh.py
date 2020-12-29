@@ -11,7 +11,7 @@ from stl import Mesh as stlMesh
 from . import MeshTypes
 
 
-class Mesh:
+class BuildingMesh:
     def __init__(self, mesh_type=MeshTypes.PRIMARY, offset=[0, 0, 0]):
         self.file_name = None
         self.name = None
@@ -24,8 +24,11 @@ class Mesh:
         self.offset = offset
 
     def load_mesh(self, mesh_file):
-        if mesh_file.lower().endswith('.stl'):
+        try:
             self.mesh = _read_stl(mesh_file)
+        except:
+            raise IOError(f"failed to load {mesh_file}, make sure it exists and is in stl format")
+
         if self.mesh is not None:
             self.bounds = self.mesh_bounds()
             self.centerpoint = self.mesh_centerpoint()
