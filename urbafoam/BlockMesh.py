@@ -21,11 +21,11 @@ def setup_windtunnel(config, primary_bounds, quality, case_dir, minZ=None):
     if quality == Quality.QUICK:
         inlet_buffer = max_z * 4
         outflow_buffer = max_z * 8
-        height_factor = 2
+        height_factor = 3
     elif quality == Quality.NORMAL:
         inlet_buffer = max_z * 6
         outflow_buffer = max_z * 12
-        height_factor = 5
+        height_factor = 6
 
     side_buffer = max_z * 5
     model_width = max_y - min_y
