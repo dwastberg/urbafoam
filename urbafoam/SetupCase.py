@@ -29,7 +29,7 @@ def setupCase(building_model, quality, procs, out_dir, config):
 
     buildingMesh = BuildingMesh()
 
-    buildingMesh.load_mesh(building_model)
+    buildingMesh.load_mesh(building_model,center_at_zero=True)
 
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
     sample_spacing = get_or_update_config(config, "urbafoam.postprocess", "sampleSpacing", 1.0)

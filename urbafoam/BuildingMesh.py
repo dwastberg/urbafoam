@@ -11,7 +11,7 @@ from .Enums import MeshTypes
 
 
 class BuildingMesh:
-    def __init__(self, mesh_type=MeshTypes.PRIMARY, offset=[0, 0, 0]):
+    def __init__(self, mesh_type=MeshTypes.PRIMARY):
         self.file_name = None
         self.name = None
         self.mesh = None
@@ -20,9 +20,9 @@ class BuildingMesh:
         self.bounds = None
         self.centerpoint = [0, 0, 0]
         self.type = mesh_type
-        self.offset = offset
+        self.offset = [0, 0, 0]
 
-    def load_mesh(self, mesh_file):
+    def load_mesh(self, mesh_file, offset=[0, 0, 0], center_at_zero = False):
         try:
             self.mesh = _read_stl(mesh_file)
         except:
@@ -31,11 +31,21 @@ class BuildingMesh:
         if self.mesh is not None:
             self.bounds = self.mesh_bounds()
             self.centerpoint = self.mesh_centerpoint()
+            self.offset = offset
             self.file_name = os.path.basename(mesh_file)
             self.name = os.path.splitext(self.file_name)[0]
-
         else:
-            raise ValueError("Failed to load %s" % (mesh_file))
+            raise IOError(f"failed to load {mesh_file}, make sure it exists and is in stl format")
+        if center_at_zero:
+            self.offset = [-self.centerpoint[0],-self.centerpoint[1],0]
+        if min(self.offset) != 0 or max(self.offset) !=0:
+            self.mesh.translate(self.offset)
+            self.bounds = self.mesh_bounds()
+            self.centerpoint = self.mesh_centerpoint()
+            pass
+
+
+
 
     def mesh_bounds(self, mesh=None):
         if mesh is None:
@@ -78,13 +88,13 @@ class BuildingMesh:
             max_z = self.bounds[2][1]
             return [min_x + ((max_x - min_x) / 2), min_y + ((max_y - min_y) / 2), min_z]
 
-    def rotate_mesh(self, rotation):
+    def _rotate_mesh(self, rotation):
         self.rotation = rotation  # 270 - wind_direction
         self.rotated_mesh = copy.deepcopy(self.mesh)
         self.rotated_mesh.rotate([0, 0, 1], radians(self.rotation), point=self.centerpoint)
 
     def rotate_and_save_mesh(self, wind_direction, case_dir):
-        self.rotate_mesh(270 - wind_direction)
+        self._rotate_mesh(270 - wind_direction)
         out_file = case_dir / "constant" / "triSurface" / self.file_name
         out_file.parent.mkdir(parents=True, exist_ok=True)
         self.rotated_mesh.save(out_file)
