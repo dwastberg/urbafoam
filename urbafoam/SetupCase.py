@@ -18,14 +18,14 @@ from .SnappyHexMesh import setup_snappy
 
 
 def setupCase(building_model, quality, procs, out_dir, config):
-
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(exist_ok=True, parents=True)
 
     mesh_dir = out_dir / "data" / "building_mesh"
     mesh_dir.mkdir(exist_ok=True, parents=True)
     building_model = Path(building_model)
-    building_model = make_building_mesh(building_model,mesh_dir,height_attr=get_value(config,"urbafoam.models","height_attribute"))
+    building_model = make_building_mesh(building_model, mesh_dir,
+                                        height_attr=get_value(config, "urbafoam.models", "height_attribute"))
 
     buildingMesh = BuildingMesh()
 

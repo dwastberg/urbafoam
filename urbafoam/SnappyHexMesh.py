@@ -76,7 +76,7 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
     snappy_data['nCellsBetweenLevels'] = nCellsBetweenLevels
     snappy_data['nSurfaceLayers'] = nSurfaceLayers
 
-    analysis_area_buffer = get_value(config,"urbafoam.postprocess","sampleBuffer")
+    analysis_area_buffer = get_value(config, "urbafoam.postprocess", "sampleBuffer")
     analysis_area_buffer *= 1.5
     snappy_data['analysis_minx'] = analysis_bounds[0][0] - analysis_area_buffer
     snappy_data['analysis_maxx'] = analysis_bounds[0][1] + analysis_area_buffer

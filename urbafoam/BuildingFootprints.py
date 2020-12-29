@@ -25,6 +25,6 @@ def footprint_to_mesh(filename, height_attr):
 
 if __name__ == '__main__':
     bm = footprint_to_mesh('tests/testdata/buildings.shp', 'height')
-    with open('/tmp/buildings.stl','wb') as dst:
+    with open('/tmp/buildings.stl', 'wb') as dst:
         dst.write(trimesh.exchange.stl.export_stl(bm))
     pass

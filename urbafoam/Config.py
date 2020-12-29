@@ -23,8 +23,9 @@ def save_config_file(out_dir, config):
     with open(out_dir / 'urbafoam.toml', 'w') as dst:
         toml.dump(config, dst)
 
-def get_value(config,group,key):
-    group=group.lower()
+
+def get_value(config, group, key):
+    group = group.lower()
     group = group.lower()
     if group:
         if group not in config:
@@ -34,6 +35,7 @@ def get_value(config,group,key):
         cfg_group = config
     value = cfg_group.get(key, None)
     return value
+
 
 def get_or_update_config(config, group, key, update_value, overwrite=False):
     group = group.lower()

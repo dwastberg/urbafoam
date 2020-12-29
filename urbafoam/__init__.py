@@ -34,7 +34,7 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
     Setup and Generate OpenFoam case files
     """
     if outdir is None:
-        outdir=os.getcwd()
+        outdir = os.getcwd()
     outdir = Path(outdir).expanduser().absolute()
     print(outdir)
     config = load_config(config, outdir)
@@ -58,7 +58,7 @@ def setup(quality, config, wind_dir, model, height, p, outdir):
             sys.exit(f"{model_ext} is an unsupported filetype for buildings")
         if model_ext in building_footprint_formats:
             if height is not None:
-                height_attr = get_or_update_config(config,"urbafoam.models","height_attribute",height,True)
+                height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
             else:
                 height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", "height")
         else:
@@ -103,7 +103,7 @@ def postprocess(config, format, casedir):
     config = load_config(config, casedir)
     wind_directions = get_value(config, "urbafoam.wind", "wind_directions")
     sample_spacing = get_value(config, "urbafoam.postprocess", "sampleSpacing")
-    Uref = get_value(config,"urbafoam.initalconditions","Uref")
+    Uref = get_value(config, "urbafoam.initalconditions", "Uref")
     get_speedup = get_or_update_config(config, "urbafoam.postprocess", "calcSpeedup", True)
 
     scale_vectors = get_or_update_config(config, "urbafoam.postprocess", "scaleVectorsBy", 2.0)
@@ -112,43 +112,39 @@ def postprocess(config, format, casedir):
     if format is not None:
         format = format.replace('.', '')
         format = format.lower()
-        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat",format, overwrite=True)
+        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat", format, overwrite=True)
     else:
         format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat", 'csv')
 
-
     if format == 'csv':
         file_ext = 'csv'
-    elif format in ('shp','shape'):
+    elif format in ('shp', 'shape'):
         file_ext = 'shp'
-    elif format in ('json','geojson'):
+    elif format in ('json', 'geojson'):
         file_ext = 'json'
     else:
         raise ValueError(f'output type {format} not recognized. Must be one of {known_formats}')
-
-
-
 
     WRITE = get_or_update_config(config, "urbafoam.debug", "write_postProcess", False)
     if WRITE:
         for w in wind_directions:
             write_oriented_data(casedir / str(w), 'samplePoints_2m')
 
-    sample_height = get_value(config,"urbafoam.postprocess","sampleHeights")
+    sample_height = get_value(config, "urbafoam.postprocess", "sampleHeights")
     normalized_data_collection = {}
     for s in sample_height:
         sample_name = f'samplePoints_{s}m'
 
         sample_points_with_data = find_sample_points_with_data(casedir, sample_name, sample_spacing, wind_directions,
-                                                           write=WRITE)
+                                                               write=WRITE)
         base_points, normalized_data = normalize_oriented_data(sample_points_with_data, casedir, wind_directions, Uref,
-                                                             sample_name)
+                                                               sample_name)
         normalized_data_collection[sample_name] = (base_points, normalized_data)
 
-        writeWindPoints(base_points, normalized_data, wind_directions, casedir / 'results' / f'{sample_name}_U_pts.json', format=format)
+        writeWindPoints(base_points, normalized_data, wind_directions,
+                        casedir / 'results' / f'{sample_name}_U_pts.json', format=format)
         for w in wind_directions:
             data = orient_sample_date(casedir / str(w), sample_name, field='U', Uref=Uref)
-            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors, format=format)
+            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.json", scale=scale_vectors,
+                             format=format)
     save_config_file(casedir, config)
-
-

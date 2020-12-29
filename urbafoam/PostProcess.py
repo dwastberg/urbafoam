@@ -39,7 +39,6 @@ def orient_sample_date(case_dir, sample_name, field='U', Uref=None):
     sample_data = load_sample_points(case_dir, sample_name, field)
     if sample_data.shape[1] == 6:  # vector data
 
-
         start_points = sample_data[:, :3]
         data = sample_data[:, 3:]  # vector
         if field == 'U' and (Uref is not None and Uref > 0):
@@ -55,26 +54,28 @@ def orient_sample_date(case_dir, sample_name, field='U', Uref=None):
         start_points = (start_points + centerpoint).dot(rotation_matrix) - centerpoint
         return np.concatenate((start_points, data_points), axis=1)
 
-def write_oriented_data(case_dir,sample_name,field='U'):
-    data = orient_sample_date(case_dir,sample_name,field)
+
+def write_oriented_data(case_dir, sample_name, field='U'):
+    data = orient_sample_date(case_dir, sample_name, field)
     filename = f"{sample_name}_{field}.xyz"
-    np.savetxt(case_dir / 'results' / filename,data)
+    np.savetxt(case_dir / 'results' / filename, data)
+
 
 def find_sample_points_with_data(case_dir, sample_name, spacing, wind_directions, field='U', write=False):
-    base_points = np.loadtxt(case_dir/"sample_points.txt")
-    base_points = base_points[:,:2]
-    buffered_base_points = [(p,Point(p).buffer(spacing*0.45)) for p in base_points]
+    base_points = np.loadtxt(case_dir / "sample_points.txt")
+    base_points = base_points[:, :2]
+    buffered_base_points = [(p, Point(p).buffer(spacing * 0.45)) for p in base_points]
     filename = f"{sample_name}_{field}.xyz"
     kept_sample_points = []
 
     for w in wind_directions:
-        #case_data_points = np.loadtxt(case_dir/str(w)/filename)
-        case_data_points = orient_sample_date(case_dir/str(w),sample_name,field)
-        #case_data_points_2D = [Point(p) for p in case_data_points[:,:2]]
-        case_data_points_2D = MultiPoint(case_data_points[:,:2])
+        # case_data_points = np.loadtxt(case_dir/str(w)/filename)
+        case_data_points = orient_sample_date(case_dir / str(w), sample_name, field)
+        # case_data_points_2D = [Point(p) for p in case_data_points[:,:2]]
+        case_data_points_2D = MultiPoint(case_data_points[:, :2])
         rtree = STRtree(case_data_points_2D)
         kept_sample_index = []
-        for idx, (p,pt) in enumerate(buffered_base_points):
+        for idx, (p, pt) in enumerate(buffered_base_points):
             res = rtree.query(pt)
             if len(res) == 0:
                 continue
@@ -83,32 +84,29 @@ def find_sample_points_with_data(case_dir, sample_name, spacing, wind_directions
                 kept_sample_index.append(idx)
         for i in kept_sample_index[::-1]:
             buffered_base_points.pop(i)
-    kept_sample_points=np.array(kept_sample_points)
+    kept_sample_points = np.array(kept_sample_points)
     if write:
-        np.savetxt(case_dir/f"{sample_name}_sample_points.txt",kept_sample_points)
+        np.savetxt(case_dir / f"{sample_name}_sample_points.txt", kept_sample_points)
     return kept_sample_points
 
 
-
-
-
-def normalize_oriented_data(base_points, case_dir,wind_directions, Uref,sample_name,field='U', speedup=True):
-    #base_points = np.loadtxt(case_dir/f"{sample_name}_sample_points.txt")
+def normalize_oriented_data(base_points, case_dir, wind_directions, Uref, sample_name, field='U', speedup=True):
+    # base_points = np.loadtxt(case_dir/f"{sample_name}_sample_points.txt")
     base_points_hull = MultiPoint(base_points).convex_hull
     interpZ_done = False
     if not speedup:
         Uref = None
     normalized_data = []
     for w in wind_directions:
-        data = orient_sample_date(case_dir/str(w), sample_name, field, Uref)
-        #points_in_hull = [Point(p).intersects(base_points_hull) for p in data[:,:2]]
-        #data = data[points_in_hull]
-        #reduce data to just point and value
-        points = data[:,:2]
+        data = orient_sample_date(case_dir / str(w), sample_name, field, Uref)
+        # points_in_hull = [Point(p).intersects(base_points_hull) for p in data[:,:2]]
+        # data = data[points_in_hull]
+        # reduce data to just point and value
+        points = data[:, :2]
 
-        pointsZ = data[:,2]
+        pointsZ = data[:, 2]
         if field == 'U':
-            data = data[:,6]
+            data = data[:, 6]
         elif field == 'p':
             data = data[:, 4]
         else:
@@ -117,19 +115,16 @@ def normalize_oriented_data(base_points, case_dir,wind_directions, Uref,sample_n
             interpZ = NearestNDInterpolator(points, pointsZ)
             base_Z = interpZ(base_points)
             interpZ_done = True
-        interp = LinearNDInterpolator(points,data)
+        interp = LinearNDInterpolator(points, data)
         base_data = interp(base_points)
 
-        #LinearND only works on points inside convex hull. Use this to set value on points
-        #outside convex hull
-        interp = NearestNDInterpolator(points,data)
+        # LinearND only works on points inside convex hull. Use this to set value on points
+        # outside convex hull
+        interp = NearestNDInterpolator(points, data)
         NN_base_data = interp(base_points)
         missing_data = np.isnan(base_data)
         base_data[missing_data] = NN_base_data[missing_data]
 
         normalized_data.append(base_data)
-    base_points = np.hstack((base_points,base_Z.reshape((-1,1))))
-    return (base_points,normalized_data)
-    
-
-
+    base_points = np.hstack((base_points, base_Z.reshape((-1, 1))))
+    return (base_points, normalized_data)
