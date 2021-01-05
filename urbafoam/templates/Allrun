@@ -51,4 +51,5 @@ runApplication -o postProcess -latestTime -func sampleDict
 {{/eachCaseParallel}}
 {{/runSample}}
 
+touch ${PWD##*/}.foam
 # ----------------------------------------------------------------- end-of-file
