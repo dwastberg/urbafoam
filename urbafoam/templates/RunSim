@@ -28,3 +28,5 @@ runParallel  -o postProcess -latestTime -func sampleDict
 runApplication -o postProcess -latestTime -func sampleDict
 {{/eachCaseParallel}}
 {{/runSample}}
+
+touch ${PWD##*/}.foam

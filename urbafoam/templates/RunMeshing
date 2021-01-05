@@ -25,3 +25,5 @@ runParallel -o snappyHexMesh -overwrite
 {{^eachCaseParallel}}
 runApplication -o snappyHexMesh -overwrite
 {{/eachCaseParallel}}
+
+touch ${PWD##*/}.foam

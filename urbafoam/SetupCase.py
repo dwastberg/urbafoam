@@ -106,3 +106,4 @@ def create_run_all_cases_script(out_dir, wind_directions):
 
     with open(out_dir / "RunAllCases", 'w', newline='\n') as f:
         f.write(out_string)
+        os.chmod(out_dir / "RunAllCases", 0o755)
