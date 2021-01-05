@@ -19,15 +19,15 @@ def setup_windtunnel(config, primary_bounds, quality, case_dir, minZ=None):
     if minZ is not None:
         min_z = minZ
     if quality == Quality.QUICK:
-        inlet_buffer = max_z * 4
-        outflow_buffer = max_z * 8
-        height_factor = 3
+        inlet_buffer = max_z * get_or_update_config(config,config_group,"downwind_buffer",4)
+        outflow_buffer = max_z * get_or_update_config(config,config_group,"upwind_buffer",8)
+        height_factor = get_or_update_config(config,config_group,"height_buffer",3)
     elif quality == Quality.NORMAL:
-        inlet_buffer = max_z * 6
-        outflow_buffer = max_z * 12
-        height_factor = 6
+        inlet_buffer = max_z * get_or_update_config(config,config_group,"downwind_buffer",6)
+        outflow_buffer = max_z * get_or_update_config(config,config_group,"upwind_buffer",12)
+        height_factor = get_or_update_config(config,config_group,"height_buffer",6)
 
-    side_buffer = max_z * 5
+    side_buffer = max_z * get_or_update_config(config,config_group,"side_buffer",5)
     model_width = max_y - min_y
     min_domain_width = model_width / 0.17  # 17% is recommended minimal value in Blocken
     if quality == Quality.QUICK:
