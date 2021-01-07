@@ -6,16 +6,16 @@ from .Config import get_or_update_config
 from .Enums import Quality
 
 
-def setup_windtunnel(config, primary_bounds, quality, case_dir, minZ=None):
+def setup_windtunnel(config, primary_bounds, surrounding_bounds, quality, case_dir, minZ=None):
     config_group = "urbafoam.windtunnel"
     cell_size = get_or_update_config(config, config_group, "cell_size", 10)
     z_grading = get_or_update_config(config, config_group, "z_grading", 2)
     min_x = primary_bounds[0][0]
     max_x = primary_bounds[0][1]
-    min_y = primary_bounds[1][0]
-    max_y = primary_bounds[1][1]
+    min_y = min(primary_bounds[1][0],surrounding_bounds[1][0])
+    max_y = max(primary_bounds[1][1],surrounding_bounds[1][1])
     min_z = primary_bounds[2][0]
-    max_z = primary_bounds[2][1]
+    max_z = max(primary_bounds[2][1],surrounding_bounds[2][1])
     if minZ is not None:
         min_z = minZ
     if quality == Quality.QUICK:

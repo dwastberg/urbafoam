@@ -25,12 +25,13 @@ def cli():
 @click.option('-q', '--quality')
 @click.option('-w', '--wind-dir')
 @click.option('-m', '--model', type=click.Path())
-@click.option('-e', '--height')
+@click.option('-r', '--surround', type=click.Path())
+@click.option('-h', '--height')
 @click.option('-s', '--sample-points', type=click.Path())
 @click.option('-p', type=int)
 @click.option('-c', '--config', type=click.Path())
 @click.argument('outdir', type=click.Path())
-def setup(quality, config, wind_dir, model, height, sample_points, p, outdir):
+def setup(quality, config, wind_dir, model, surround, height, sample_points, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
@@ -51,24 +52,27 @@ def setup(quality, config, wind_dir, model, height, sample_points, p, outdir):
     building_mesh_formats = {'.stl'}
     building_footprint_formats = {'.json', '.geojson', '.shp'}
 
+
     if model is None:
-        primary_building_model = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
-    else:
+        model = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
+    if model is not None:
         model = Path(model).expanduser()
-        model_ext = model.suffix
-        if model_ext not in building_mesh_formats.union(building_footprint_formats):
-            sys.exit(f"{model_ext} is an unsupported filetype for buildings")
-        if model_ext in building_footprint_formats:
-            if height is not None:
-                height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
-            else:
-                height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", "height")
-        else:
-            height_attr = None
-        primary_building_model = get_or_update_config(config, "urbafoam.models", "primary_buildings", str(model), True)
-    assert primary_building_model is not None and os.path.isfile(
-        primary_building_model), "cannot find building model %s" % model
-    print(primary_building_model)
+        if not model.is_file():
+            raise FileNotFoundError(f"cannot find model {model}")
+
+    if surround is None:
+        surround = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
+    if surround is not None:
+        surround = Path(surround).expanduser()
+        if not surround.is_file():
+            raise FileNotFoundError(f"cannot find surrounding model {surround}")
+
+    if height is not None:
+        height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
+    else:
+        height_attr = get_value(config, "urbafoam.models", "height_attribute")
+
+
     if quality is None:
         quality = get_or_update_config(config, "", "quality", 'quick')
     else:
@@ -90,7 +94,7 @@ def setup(quality, config, wind_dir, model, height, sample_points, p, outdir):
         procs = get_or_update_config(config, "urbafoam.parallel", "procs", p, overwrite=True)
 
     outdir = get_or_update_config(config, "", "out_dir", str(outdir))
-    setupCase(primary_building_model, quality, procs, sample_points, outdir, config)
+    setupCase(model, surround, quality, procs, sample_points, outdir, config)
 
 
 @cli.command()

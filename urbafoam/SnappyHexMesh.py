@@ -42,6 +42,8 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
     snappy_data['buildingModels'] = []
     analysis_bounds = None
     for b in building_models:
+        if b is None:
+            continue
         if b.type == MeshTypes.PRIMARY:
             feature_level = primary_feature_level
             refinementLevel = primary_model_refinement_level

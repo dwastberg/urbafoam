@@ -10,27 +10,42 @@ from .BuildingMesh import BuildingMesh
 from .Config import save_config_file, get_or_update_config, get_value, set_value
 from .Controls import setup_controls
 from .DataConversion import make_building_mesh
-from .Enums import ModelType, Quality
+from .Enums import ModelType, Quality, MeshTypes
 from .InitialConditions import setup_initial_conditions
 from .SamplePoints import generate_sample_points, setup_samplepoint
 from .Scheme import setup_scheme
 from .SnappyHexMesh import setup_snappy
 
 
-def setupCase(building_model, quality, procs, sample_points, out_dir, config):
+def setupCase(primary_model, surrounding_model, quality, procs, sample_points, out_dir, config):
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(exist_ok=True, parents=True)
 
     mesh_dir = out_dir / "data" / "building_mesh"
     mesh_dir.mkdir(exist_ok=True, parents=True)
-    building_model = Path(building_model)
-    building_model = make_building_mesh(building_model, mesh_dir,
-                                        height_attr=get_value(config, "urbafoam.models", "height_attribute"))
+    height_attr = get_value(config, "urbafoam.models", "height_attribute")
+    primary_mesh_path = make_building_mesh(primary_model, mesh_dir,
+                                       height_attr)
+    if primary_mesh_path is None:
+        raise IOError(f"Could not load {primary_model}")
+
+    if surrounding_model is not None:
+        surrounding_mesh_path = make_building_mesh(surrounding_model,mesh_dir, height_attr)
+        if surrounding_mesh_path is None:
+            raise IOError(f"Could not load {surrounding_model}")
+    else:
+        surrounding_mesh_path = None
 
     model_offset = get_or_update_config(config,"urbafoam.models", "offset", [0.0, 0.0, 0.0])
     buildingMesh = BuildingMesh()
-    buildingMesh.load_mesh(building_model,offset=model_offset,center_at_zero=False)
+    buildingMesh.load_mesh(primary_mesh_path, offset=model_offset, center_at_zero=False)
     set_value(config, "urbafoam.models", "offset", buildingMesh.offset)
+
+    if surrounding_mesh_path is not None:
+        surroundingMesh = BuildingMesh(mesh_type=MeshTypes.SURROUNDING)
+        surroundingMesh.load_mesh(surrounding_mesh_path,offset=buildingMesh.offset)
+    else:
+        surroundingMesh = None
 
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
     if sample_points is not None:
@@ -50,10 +65,19 @@ def setupCase(building_model, quality, procs, sample_points, out_dir, config):
     wind_directions = get_or_update_config(config, "urbafoam.wind", "wind_directions", [270])
 
     for w in wind_directions:
-        case_dir = out_dir / str(w)
+        if w.is_integer():
+            case_dir_name = str(int(w))
+        else:
+            case_dir_name = str(w)
+        case_dir = out_dir / case_dir_name
         rot_matrix = buildingMesh.rotate_and_save_mesh(w, case_dir)
-        windtunnel_data = setup_windtunnel(config, buildingMesh.rotated_bounds, quality, case_dir, 0)
-        snappy_data = setup_snappy(config, windtunnel_data, [buildingMesh], quality)
+        if surroundingMesh is not None:
+            surroundingMesh.rotate_and_save_mesh(w,case_dir)
+            surrounding_bounds = surroundingMesh.rotated_bounds
+        else:
+            surrounding_bounds = buildingMesh.rotated_bounds
+        windtunnel_data = setup_windtunnel(config, buildingMesh.rotated_bounds, surrounding_bounds, quality, case_dir, 0)
+        snappy_data = setup_snappy(config, windtunnel_data, [buildingMesh, surroundingMesh], quality)
         control_data = setup_controls(config, quality)
         initial_condition = setup_initial_conditions(config, ModelType.URBAN, buildingMesh.rotated_bounds)
         scheme_data = setup_scheme(config)

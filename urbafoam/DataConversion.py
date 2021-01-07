@@ -7,7 +7,10 @@ from shapely.geometry import shape
 
 
 def make_building_mesh(model_path, outdir, height_attr=None):
+    if not model_path.is_file():
+        raise FileNotFoundError(f"Cannot find {model_path}")
     model_ext = model_path.suffix.lower()
+
     if model_ext == '.stl':
         building_model = copy(model_path, outdir)
         mesh_file = outdir / model_path.name
@@ -17,6 +20,8 @@ def make_building_mesh(model_path, outdir, height_attr=None):
         mesh_file = outdir / (model_path.stem + ".stl")
         with open(mesh_file, 'wb') as dst:
             dst.write(trimesh.exchange.stl.export_stl(building_meshes))
+    else:
+        raise IOError(f"Unknown model file format {model_ext}")
     return mesh_file
 
 
