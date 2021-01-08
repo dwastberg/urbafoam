@@ -28,10 +28,12 @@ def cli():
 @click.option('-r', '--surround', type=click.Path())
 @click.option('-h', '--height')
 @click.option('-s', '--sample-points', type=click.Path())
+@click.option('-z',type=float)
+@click.option('-t','--modeltype')
 @click.option('-p', type=int)
 @click.option('-c', '--config', type=click.Path())
 @click.argument('outdir', type=click.Path())
-def setup(quality, config, wind_dir, model, surround, height, sample_points, p, outdir):
+def setup(quality, config, wind_dir, model, surround, height, sample_points, z, modeltype, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
@@ -48,10 +50,6 @@ def setup(quality, config, wind_dir, model, surround, height, sample_points, p, 
             get_or_update_config(config, "urbafoam.wind", "wind_directions", wind_directions, True)
         except:
             sys.exit(f"failed to parse wind directions {wind_dir}")
-
-    building_mesh_formats = {'.stl'}
-    building_footprint_formats = {'.json', '.geojson', '.shp'}
-
 
     if model is None:
         model = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
@@ -71,6 +69,12 @@ def setup(quality, config, wind_dir, model, surround, height, sample_points, p, 
         height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
     else:
         height_attr = get_value(config, "urbafoam.models", "height_attribute")
+
+    if z is not None:
+        z0 = float(z)
+    else:
+        z0 = modeltype
+
 
 
     if quality is None:
@@ -94,7 +98,7 @@ def setup(quality, config, wind_dir, model, surround, height, sample_points, p, 
         procs = get_or_update_config(config, "urbafoam.parallel", "procs", p, overwrite=True)
 
     outdir = get_or_update_config(config, "", "out_dir", str(outdir))
-    setupCase(model, surround, quality, procs, sample_points, outdir, config)
+    setupCase(model, surround, quality, z0, procs, sample_points, outdir, config)
 
 
 @cli.command()
