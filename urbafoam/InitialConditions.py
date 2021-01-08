@@ -7,8 +7,6 @@ def setup_initial_conditions(config, model_type, bounds):
     config_group = "urbafoam.initalConditions"
     refSpeed = get_or_update_config(config, config_group, "Uref", 10)
     Href = get_or_update_config(config, config_group, "Href", 30)
-    Zref = 10
-    z0ref = 0.1
 
     if model_type == ModelType.DENSE_URBAN:
         ABL = 420
@@ -31,7 +29,7 @@ def setup_initial_conditions(config, model_type, bounds):
 
     zBlend = min(ABL, bounds[2][1] * 10)
 
-    ke, eps = turbulenceConstants(Href, z0, refSpeed, Zref, z0ref)
+    ke, eps = turbulenceConstants(Href, z0, refSpeed)
 
     initial_conditions = {
         'turbulentKE': ke,
