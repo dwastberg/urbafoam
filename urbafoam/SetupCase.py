@@ -16,8 +16,20 @@ from .SamplePoints import generate_sample_points, setup_samplepoint
 from .Scheme import setup_scheme
 from .SnappyHexMesh import setup_snappy
 
+modelTypeLookup = {
+    'dense': ModelType.DENSE_URBAN,
+    'denseurban': ModelType.DENSE_URBAN,
+    'dense_urban': ModelType.URBAN,
+    'urban': ModelType.URBAN,
+    'suburb': ModelType.SUBURB,
+    'suburban': ModelType.SUBURB,
+    'forset': ModelType.FOREST,
+    'park': ModelType.PARK,
+    'field': ModelType.FIELD,
+    'water':ModelType.WATER
+}
 
-def setupCase(primary_model, surrounding_model, quality, procs, sample_points, out_dir, config):
+def setupCase(primary_model, surrounding_model, quality, z0, procs, sample_points, out_dir, config):
     out_dir = Path(out_dir).expanduser()
     out_dir.mkdir(exist_ok=True, parents=True)
 
@@ -48,6 +60,7 @@ def setupCase(primary_model, surrounding_model, quality, procs, sample_points, o
         surroundingMesh = None
 
     sample_buffer = get_or_update_config(config, "urbafoam.postprocess", "sampleBuffer", 10)
+    sample_points = get_or_update_config(config,"urbafoam.postprocess","samplePoints",sample_points)
     if sample_points is not None:
         sample_points = Path(sample_points).expanduser()
         if not sample_points.is_file():
@@ -61,6 +74,18 @@ def setupCase(primary_model, surrounding_model, quality, procs, sample_points, o
 
     np.savetxt(out_dir / "sample_points.txt", sample_points)
     sampling_heights = get_or_update_config(config, "urbafoam.postProcess", "sampleHeights", [2, 10])
+
+    if z0 is None:
+        z0 = get_or_update_config(config,"urbafoam.initalConditions","z0",'urban')
+    if not isinstance(z0,float):
+        z0 = z0.lower()
+        if z0 not in modelTypeLookup:
+            raise ValueError(f'surrounding type {z0} not recognized, use one of {list(modelTypeLookup.keys())}')
+        set_value(config,"urbafoam.initalConditions","z0",z0)
+        z0 = modelTypeLookup[z0]
+    else:
+        set_value(config, "urbafoam.initalConditions", "z0", z0)
+
 
     wind_directions = get_or_update_config(config, "urbafoam.wind", "wind_directions", [270])
 
@@ -79,7 +104,7 @@ def setupCase(primary_model, surrounding_model, quality, procs, sample_points, o
         windtunnel_data = setup_windtunnel(config, buildingMesh.rotated_bounds, surrounding_bounds, quality, case_dir, 0)
         snappy_data = setup_snappy(config, windtunnel_data, [buildingMesh, surroundingMesh], quality)
         control_data = setup_controls(config, quality)
-        initial_condition = setup_initial_conditions(config, ModelType.URBAN, buildingMesh.rotated_bounds)
+        initial_condition = setup_initial_conditions(config, z0, buildingMesh.rotated_bounds)
         scheme_data = setup_scheme(config)
         sample_point_data = setup_samplepoint(sample_points, rot_matrix, buildingMesh.centerpoint, sampling_heights)
 
