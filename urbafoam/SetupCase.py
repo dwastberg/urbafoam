@@ -10,24 +10,12 @@ from .BuildingMesh import BuildingMesh
 from .Config import save_config_file, get_or_update_config, get_value, set_value
 from .Controls import setup_controls
 from .DataConversion import make_building_mesh
-from .Enums import ModelType, Quality, MeshTypes
+from .Enums import Quality, MeshTypes, modelTypeLookup
 from .InitialConditions import setup_initial_conditions
 from .SamplePoints import generate_sample_points, setup_samplepoint
 from .Scheme import setup_scheme
 from .SnappyHexMesh import setup_snappy
 
-modelTypeLookup = {
-    'dense': ModelType.DENSE_URBAN,
-    'denseurban': ModelType.DENSE_URBAN,
-    'dense_urban': ModelType.URBAN,
-    'urban': ModelType.URBAN,
-    'suburb': ModelType.SUBURB,
-    'suburban': ModelType.SUBURB,
-    'forset': ModelType.FOREST,
-    'park': ModelType.PARK,
-    'field': ModelType.FIELD,
-    'water':ModelType.WATER
-}
 
 def setupCase(primary_model, surrounding_model, quality, z0, procs, sample_points, out_dir, config):
     out_dir = Path(out_dir).expanduser()
