@@ -1,0 +1,16 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. tools/RunFunctions
+
+{{#runSample}}
+{{#eachCaseParallel}}
+runParallel  -o postProcess -latestTime -func sampleDict
+{{/eachCaseParallel}}
+{{^eachCaseParallel}}
+runApplication -o postProcess -latestTime -func sampleDict
+{{/eachCaseParallel}}
+{{/runSample}}
+
+touch ${PWD##*/}.foam

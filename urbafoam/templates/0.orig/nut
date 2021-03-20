@@ -36,14 +36,7 @@ boundaryField
     wall
     {
         type            nutkAtmRoughWallFunction;
-        z0              uniform 0.001;
-        value           uniform 0.0;
-    }
-
-    other
-    {
-        type            nutkAtmRoughWallFunction;
-        z0              uniform {{z0_other}}; // other patch roughness than walls.
+        z0              uniform {{z0_walls}};
         value           uniform 0.0;
     }
 
@@ -51,6 +44,13 @@ boundaryField
     {
         type            nutkAtmRoughWallFunction;
         z0              uniform {{z0}}; 
+        value           uniform 0.0;
+    }
+
+    ".*"
+    {
+        type            nutkAtmRoughWallFunction;
+        z0              uniform {{z0_other}}; // other patch roughness than walls.
         value           uniform 0.0;
     }
 

@@ -62,7 +62,8 @@ def setupCase(primary_model, surrounding_model, quality, z0, procs, sample_point
 
     np.savetxt(out_dir / "sample_points.txt", sample_points)
     sampling_heights = get_or_update_config(config, "urbafoam.postProcess", "sampleHeights", [2, 10])
-
+    if not sampling_heights:
+        sampling_heights = [0]
     if z0 is None:
         z0 = get_or_update_config(config,"urbafoam.initalConditions","z0",'urban')
     if not isinstance(z0,float):

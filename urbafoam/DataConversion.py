@@ -22,6 +22,11 @@ def make_building_mesh(model_path, outdir, height_attr=None):
             dst.write(trimesh.exchange.stl.export_stl(building_meshes))
     else:
         raise IOError(f"Unknown model file format {model_ext}")
+    #mesh name cannot start with a number (openFOAM 'limitation')
+    if mesh_file.name[0].isdigit():
+        new_name = outdir / ('_'+ str(mesh_file.name))
+        mesh_file.rename(new_name)
+        mesh_file = new_name
     return mesh_file
 
 

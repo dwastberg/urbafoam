@@ -6,7 +6,7 @@ from pathlib import Path
 
 import click
 
-from .Config import load_config, save_config_file, get_or_update_config, merge_configs, get_value
+from .Config import load_config, save_config_file, get_or_update_config, merge_configs, get_value,set_value
 from .DataIO import writeWindPoints, writeWindVectors
 from .Enums import Quality
 from .PostProcess import write_oriented_data, find_sample_points_with_data, normalize_oriented_data, orient_sample_date
@@ -57,18 +57,23 @@ def setup(quality, config, wind_dir, model, surround, height, sample_points, z, 
         model = Path(model).expanduser()
         if not model.is_file():
             raise FileNotFoundError(f"cannot find model {model}")
+        else:
+            set_value(config,"urbafoam.models", "primary_buildings",str(model))
+
 
     if surround is None:
-        surround = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
+        surround = get_or_update_config(config, "urbafoam.models", "surrounding_buildings", None)
     if surround is not None:
         surround = Path(surround).expanduser()
         if not surround.is_file():
             raise FileNotFoundError(f"cannot find surrounding model {surround}")
+        else:
+            set_value(config,"urbafoam.models", "surrounding_buildings", str(surround))
 
     if height is not None:
         height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
     else:
-        height_attr = get_value(config, "urbafoam.models", "height_attribute")
+        height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute","height")
 
     if z is not None:
         z0 = float(z)

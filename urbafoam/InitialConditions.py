@@ -35,7 +35,8 @@ def setup_initial_conditions(config, surroundings, bounds):
             z0 = 0.005
 
     zBlend = min(ABL, bounds[2][1] * 10)
-
+    z0_walls = 0.001
+    z0_other = 0.001
     ke, eps = turbulenceConstants(Href, z0, refSpeed)
 
     initial_conditions = {
@@ -45,5 +46,7 @@ def setup_initial_conditions(config, surroundings, bounds):
         'refSpeed': refSpeed,
         'Href': Href,
         'z0': z0,
+        'z0_walls': z0_walls,
+        'z0_other': z0_other
     }
     return initial_conditions
