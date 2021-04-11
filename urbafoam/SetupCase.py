@@ -10,7 +10,7 @@ from .BuildingMesh import BuildingMesh
 from .Config import save_config_file, get_or_update_config, get_value, set_value
 from .Controls import setup_controls
 from .DataConversion import make_building_mesh
-from .Enums import Quality, MeshTypes, modelTypeLookup
+from .Enums import Quality, MeshTypes, modelTypeLookup, TurbulenceModels, turbulenceTypeLookup
 from .InitialConditions import setup_initial_conditions
 from .SamplePoints import generate_sample_points, setup_samplepoint
 from .Scheme import setup_scheme
@@ -74,12 +74,20 @@ def setupCase(primary_model, surrounding_model, quality, z0, procs, sample_point
         z0 = modelTypeLookup[z0]
     else:
         set_value(config, "urbafoam.initalConditions", "z0", z0)
+    if quality == Quality.QUICK:
+        turb = get_or_update_config(config,"urbafoam.initalConditions", "turbulenceModel", "KE")
+    else:
+        turb = get_or_update_config(config, "urbafoam.initalConditions", "turbulenceModel", "KOmegaSST")
 
+    if turb.lower() not in turbulenceTypeLookup:
+        raise ValueError(f"{turb} is not a recognised turbulence model. Currently support models are ['KE', 'KOmegaSST'")
+    else:
+        turbModel = turbulenceTypeLookup[turb.lower()]
 
     wind_directions = get_or_update_config(config, "urbafoam.wind", "wind_directions", [270])
 
     for w in wind_directions:
-        if w.is_integer():
+        if isinstance(w, int) or w.is_integer():
             case_dir_name = str(int(w))
         else:
             case_dir_name = str(w)
@@ -93,7 +101,7 @@ def setupCase(primary_model, surrounding_model, quality, z0, procs, sample_point
         windtunnel_data = setup_windtunnel(config, buildingMesh.rotated_bounds, surrounding_bounds, quality, case_dir, 0)
         snappy_data = setup_snappy(config, windtunnel_data, [buildingMesh, surroundingMesh], quality)
         control_data = setup_controls(config, quality)
-        initial_condition = setup_initial_conditions(config, z0, buildingMesh.rotated_bounds)
+        initial_condition = setup_initial_conditions(config, z0, turbModel, buildingMesh.rotated_bounds)
         scheme_data = setup_scheme(config)
         sample_point_data = setup_samplepoint(sample_points, rot_matrix, buildingMesh.centerpoint, sampling_heights)
 

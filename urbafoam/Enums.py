@@ -21,7 +21,6 @@ class ModelType(Enum):
     FIELD = auto()
     WATER = auto()
 
-
 modelTypeLookup = {
     'dense': ModelType.DENSE_URBAN,
     'denseurban': ModelType.DENSE_URBAN,
@@ -33,4 +32,19 @@ modelTypeLookup = {
     'park': ModelType.PARK,
     'field': ModelType.FIELD,
     'water':ModelType.WATER
+}
+
+class TurbulenceModels(Enum):
+    KEpsilon = auto()
+    KOmegaSST = auto()
+
+turbulenceTypeLookup = {
+    'ke': TurbulenceModels.KEpsilon,
+    'k_e': TurbulenceModels.KEpsilon,
+    'kepsilon': TurbulenceModels.KEpsilon,
+    'ko': TurbulenceModels.KOmegaSST,
+    'k_o': TurbulenceModels.KOmegaSST,
+    'komega': TurbulenceModels.KOmegaSST,
+    'komegasst': TurbulenceModels.KOmegaSST,
+
 }

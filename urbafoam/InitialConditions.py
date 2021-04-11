@@ -1,9 +1,9 @@
 from .Config import get_or_update_config
-from .Enums import ModelType
+from .Enums import ModelType, TurbulenceModels
 from .windProfile import turbulenceConstants
 
 
-def setup_initial_conditions(config, surroundings, bounds):
+def setup_initial_conditions(config, surroundings, turbModel, bounds):
     config_group = "urbafoam.initalConditions"
     refSpeed = get_or_update_config(config, config_group, "Uref", 10)
     Href = get_or_update_config(config, config_group, "Href", 30)
@@ -37,11 +37,18 @@ def setup_initial_conditions(config, surroundings, bounds):
     zBlend = min(ABL, bounds[2][1] * 10)
     z0_walls = 0.001
     z0_other = 0.001
-    ke, eps = turbulenceConstants(Href, z0, refSpeed)
+    ke, eps, omega = turbulenceConstants(Href, z0, refSpeed)
+
+    if turbModel == TurbulenceModels.KOmegaSST:
+        turbulenceModel = 'kOmegaSST'
+    else:
+        turbulenceModel = 'kEpsilon'
 
     initial_conditions = {
+        'turbulenceModel': turbulenceModel,
         'turbulentKE': ke,
         'turbulentEpsilon': eps,
+        'turbulentOmega': omega,
         'Uref': refSpeed,
         'refSpeed': refSpeed,
         'Href': Href,
