@@ -25,14 +25,8 @@ boundaryField
     #include        "include/ABLConditions"
     inlet
     {
-        type            atmBoundaryLayerInletOmega;
-        flowDir		    $windDirection;
-        zDir		    $zDirection;
-        Uref            $Uref;
-        Zref            $Href;
-        z0              $z0;
-        d               $zGround;
-        zGround         $zGround;
+        type fixedValue;
+        value	$internalField;
     }
 
     outlet

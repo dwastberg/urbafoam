@@ -38,6 +38,7 @@ divSchemes
     turbulence      bounded Gauss limitedLinear 1;
     div(phi,k)      bounded Gauss linearUpwind grad(k);
     div(phi,epsilon) bounded Gauss linearUpwind grad(epsilon);
+    div(phi,omega)  bounded Gauss linearUpwind grad(omega);
     div(phi,R)      $turbulence;
 
     div(R)          Gauss linear;
