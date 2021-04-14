@@ -147,8 +147,12 @@ def create_run_all_cases_script(out_dir, wind_directions):
     out_string = "#!/bin/sh\n\n"
 
     for n, w in enumerate(wind_directions):
-        out_string += f"{str(w)}/Allclean -l;\n"
-        out_string += f"{str(w)}/Allrun;\n"
+        if isinstance(w, int) or w.is_integer():
+            case_dir_name = str(int(w))
+        else:
+            case_dir_name = str(w)
+        out_string += f"{case_dir_name}/Allclean -l;\n"
+        out_string += f"{case_dir_name}/Allrun;\n"
 
     with open(out_dir / "RunAllCases", 'w', newline='\n') as f:
         f.write(out_string)
