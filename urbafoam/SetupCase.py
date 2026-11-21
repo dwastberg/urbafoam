@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pystache
-from pystache.common import MissingTags
 
 from .BlockMesh import setup_windtunnel
 from .BuildingMesh import BuildingMesh
@@ -94,13 +93,17 @@ def setupCase(config, out_dir, doc=None):
     create_run_all_cases_script(out_dir, config.wind.wind_directions)
 
 
+# OpenFOAM files, not HTML: values are inserted as they are. Missing values are an error.
+_renderer = pystache.Renderer(escape=lambda value: value, missing_tags='strict')
+
+
 def write_case_files(case_data, case_dir):
     template_dir = Path(__file__).parent / 'templates'
     case_files = [x for x in template_dir.glob('**/*') if x.is_file() and x.name[0] != '_']
     for c in case_files:
         with open(c, 'r') as src:
             content = src.read()
-        content = pystache.render(content, case_data, missing_tags=MissingTags.strict)
+        content = _renderer.render(content, case_data)
         output_file = case_dir / c.relative_to(template_dir)
         output_file.parent.mkdir(parents=True, exist_ok=True)
         with open(output_file, 'w', newline='\n') as dst:

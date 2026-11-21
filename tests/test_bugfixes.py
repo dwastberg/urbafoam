@@ -203,3 +203,17 @@ def test_obj_model_is_converted_to_stl(tmp_path):
     stl_file, crs = make_building_mesh(tmp_path / "model.obj", tmp_path)
     assert stl_file == tmp_path / "model.stl" and crs is None
     np.testing.assert_allclose(trimesh.load(stl_file).bounds, [[100, 200, 0], [110, 220, 30]])
+
+
+def test_model_file_names_are_safe_in_openfoam_files(tmp_path):
+    import shutil
+
+    model = tmp_path / "Smith & Sons.stl"
+    shutil.copy(TESTDATA / "buildings_small.stl", model)
+    case = tmp_path / "case"
+    invoke("setup", "-q", "quick", "-w", "270", "-m", model, case)
+    text = (case / "270" / "system" / "surfaceFeaturesDict").read_text()
+    assert "&amp;" not in text
+    # the model is copied into the case under a name that is a valid OpenFOAM word
+    assert "Smith___Sons.stl" in text
+    assert (case / "270" / "constant" / "triSurface" / "Smith___Sons.stl").is_file()

@@ -1,5 +1,6 @@
 import json
 import math
+import re
 from pathlib import Path
 
 import numpy as np
@@ -7,6 +8,11 @@ import trimesh
 from shapely.geometry import MultiPoint
 
 from .Enums import MeshTypes
+
+
+def foam_name(name):
+    """`name` as a safe OpenFOAM word: used for the mesh file and patch names in the case."""
+    return re.sub(r'[^A-Za-z0-9_.-]', '_', name)
 
 
 def rotation_matrix_z(theta):
@@ -48,8 +54,8 @@ class BuildingMesh:
         self.bounds = self.mesh_bounds()
         self.centerpoint = self.mesh_centerpoint()
         self.offset = list(offset) if offset is not None else [0, 0, 0]
-        self.file_name = mesh_file.name
-        self.name = mesh_file.stem
+        self.name = foam_name(mesh_file.stem)
+        self.file_name = self.name + mesh_file.suffix.lower()
         if center_at_zero:
             self.offset = [-self.centerpoint[0], -self.centerpoint[1], 0.0]
         if min(self.offset) != 0 or max(self.offset) != 0:

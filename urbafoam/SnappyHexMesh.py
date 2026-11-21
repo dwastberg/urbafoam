@@ -31,7 +31,7 @@ def setup_snappy(snappy_cfg, sample_buffer, windtunnel_data, building_models):
             refinementLevel = snappy_cfg.SurroundingModelRefinementLevel
 
         snappy_data['buildingModels'].append({
-            'name': b.name.replace(' ', '_'),
+            'name': b.name,
             'filename': b.file_name,
             'file_basename': Path(b.file_name).stem,
             'includedAngle': includedAngle,
