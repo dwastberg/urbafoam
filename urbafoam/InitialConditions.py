@@ -1,40 +1,28 @@
-from .Config import get_or_update_config
-from .Enums import ModelType, TurbulenceModels
+from .Enums import ModelType, TurbulenceModels, modelTypeLookup, turbulenceTypeLookup
 from .windProfile import turbulenceConstants
 
+# aerodynamic roughness length z0 [m] per terrain type
+ROUGHNESS_LENGTH = {
+    ModelType.DENSE_URBAN: 1.5,
+    ModelType.URBAN: 1.0,
+    ModelType.SUBURB: 0.8,
+    ModelType.FOREST: 0.8,
+    ModelType.PARK: 0.5,
+    ModelType.FIELD: 0.05,
+    ModelType.WATER: 0.005,
+}
 
-def setup_initial_conditions(config, surroundings, turbModel, bounds):
-    config_group = "urbafoam.initalConditions"
-    refSpeed = get_or_update_config(config, config_group, "Uref", 10)
-    Href = get_or_update_config(config, config_group, "Href", 30)
 
-    if isinstance(surroundings,float):
-        z0 = surroundings
-        if z0>=1:
-            ABL = 420
-        else:
-            ABL = 320
+def setup_initial_conditions(ic_cfg):
+    refSpeed = ic_cfg.Uref
+    Href = ic_cfg.Href
+
+    if isinstance(ic_cfg.z0, str):
+        z0 = ROUGHNESS_LENGTH[modelTypeLookup[ic_cfg.z0]]
     else:
-        if surroundings == ModelType.DENSE_URBAN:
-            ABL = 420
-            z0 = 1.5
-        elif surroundings == ModelType.URBAN:
-            ABL = 420
-            z0 = 1.0
-        elif surroundings == ModelType.SUBURB or surroundings == ModelType.FOREST:
-            ABL = 320
-            z0 = 0.8
-        elif surroundings == ModelType.PARK:
-            ABL = 320
-            z0 = 0.5
-        elif surroundings == ModelType.FIELD:
-            ABL = 320
-            z0 = 0.05
-        elif surroundings == ModelType.WATER:
-            ABL = 320
-            z0 = 0.005
+        z0 = float(ic_cfg.z0)
+    turbModel = turbulenceTypeLookup[ic_cfg.turbulenceModel.lower()]
 
-    zBlend = min(ABL, bounds[2][1] * 10)
     z0_walls = 0.001
     z0_other = 0.001
     ke, eps, omega = turbulenceConstants(Href, z0, refSpeed)

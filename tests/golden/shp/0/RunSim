@@ -1,0 +1,13 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. tools/RunFunctions
+
+runParallel -o potentialFoam
+
+runParallel -o simpleFoam
+
+runParallel  -o postProcess -latestTime -func sampleDict
+
+touch ${PWD##*/}.foam

@@ -1,0 +1,9 @@
+# Config used by the regression tests (old ["urbafoam.*"] section layout on purpose: it must keep loading).
+["urbafoam.wind"]
+wind_directions = [0, 135]
+
+["urbafoam.parallel"]
+procs = 4
+
+["urbafoam.postprocess"]
+sampleSpacing = 4.0

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+0/Allclean -l;
+0/Allrun;
+135/Allclean -l;
+135/Allrun;

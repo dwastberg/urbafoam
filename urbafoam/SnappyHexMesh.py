@@ -1,43 +1,13 @@
-import os
+from pathlib import Path
 
-from .Config import get_or_update_config, get_value
-from .Enums import MeshTypes, Quality
+from .Enums import MeshTypes
 
 
-def setup_snappy(config, windtunnel_data, building_models, quality):
-    config_group = "urbafoam.snappy"
+def setup_snappy(snappy_cfg, sample_buffer, windtunnel_data, building_models):
     snappy_data = {}
-    if quality == Quality.QUICK:
-        verticalRefinementLevel = get_or_update_config(config, config_group, "verticalDomainRefinement", 2)
-        insideRefinementLevel = get_or_update_config(config, config_group, "CentralRefinement", 2)
-        verticalCentralRefinement = get_or_update_config(config, config_group, "verticalCentralRefinement", [4, 2])
-        verticalCentralRefinement = f'((3 {verticalCentralRefinement[0]}) (12 {verticalCentralRefinement[1]}))'
-        nCellsBetweenLevels = get_or_update_config(config, config_group, "CellsBetweenLevels", 2)
-        nSurfaceLayers = get_or_update_config(config, config_group, "SurfaceLayers", 2)
-        includedAngle = get_or_update_config(config, config_group, "IncludeAngle", 150)
-
-        primary_feature_level = get_or_update_config(config, config_group, "PrimaryFeatureLevel", 4)
-        surrounding_feature_level = get_or_update_config(config, config_group, "SurroundingFeatureLevel", 3)
-        primary_model_refinement_level = get_or_update_config(config, config_group, "PrimaryModelRefinementLevel",
-                                                              '(2 4)')
-        surrounding_model_refinement_level = get_or_update_config(config, config_group,
-                                                                  "SurroundingModelRefinementLevel", '(2 2)')
-
-    elif quality == Quality.NORMAL:
-        verticalRefinementLevel = get_or_update_config(config, config_group, "verticalDomainRefinement", 2)
-        insideRefinementLevel = get_or_update_config(config, config_group, "CentralRefinement", 3)
-        verticalCentralRefinement = get_or_update_config(config, config_group, "verticalCentralRefinement", [5, 3])
-        verticalCentralRefinement = f'((3 {verticalCentralRefinement[0]}) (12 {verticalCentralRefinement[1]}))'
-        nCellsBetweenLevels = get_or_update_config(config, config_group, "CellsBetweenLevels", 3)
-        nSurfaceLayers = get_or_update_config(config, config_group, "SurfaceLayers", 3)
-        includedAngle = get_or_update_config(config, config_group, "IncludeAngle", 170)
-
-        primary_feature_level = get_or_update_config(config, config_group, "PrimaryFeatureLevel", 5)
-        surrounding_feature_level = get_or_update_config(config, config_group, "SurroundingFeatureLevel", 3)
-        primary_model_refinement_level = get_or_update_config(config, config_group, "PrimaryModelRefinementLevel",
-                                                              '(3 3)')
-        surrounding_model_refinement_level = get_or_update_config(config, config_group,
-                                                                  "SurroundingModelRefinementLevel", '(2 3)')
+    verticalCentralRefinement = (f'((3 {snappy_cfg.verticalCentralRefinement[0]}) '
+                                 f'(12 {snappy_cfg.verticalCentralRefinement[1]}))')
+    includedAngle = snappy_cfg.IncludeAngle
 
     snappy_data['buildingModels'] = []
     analysis_bounds = None
@@ -45,10 +15,10 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
         if b is None:
             continue
         if b.type == MeshTypes.PRIMARY:
-            feature_level = primary_feature_level
-            refinementLevel = primary_model_refinement_level
-            if analysis_bounds == None:
-                analysis_bounds = b.rotated_bounds
+            feature_level = snappy_cfg.PrimaryFeatureLevel
+            refinementLevel = snappy_cfg.PrimaryModelRefinementLevel
+            if analysis_bounds is None:
+                analysis_bounds = [list(axis) for axis in b.rotated_bounds]
             else:
                 analysis_bounds[0][0] = min(analysis_bounds[0][0], b.rotated_bounds[0][0])
                 analysis_bounds[0][1] = max(analysis_bounds[0][1], b.rotated_bounds[0][1])
@@ -57,13 +27,13 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
                 analysis_bounds[2][0] = min(analysis_bounds[2][0], b.rotated_bounds[2][0])
                 analysis_bounds[2][1] = max(analysis_bounds[2][1], b.rotated_bounds[2][1])
         elif b.type == MeshTypes.SURROUNDING:
-            feature_level = surrounding_feature_level
-            refinementLevel = surrounding_model_refinement_level
+            feature_level = snappy_cfg.SurroundingFeatureLevel
+            refinementLevel = snappy_cfg.SurroundingModelRefinementLevel
 
         snappy_data['buildingModels'].append({
             'name': b.name.replace(' ', '_'),
             'filename': b.file_name,
-            'file_basename': os.path.splitext(b.file_name)[0],
+            'file_basename': Path(b.file_name).stem,
             'includedAngle': includedAngle,
             'featureLevel': feature_level,
             'refinementLevel': refinementLevel
@@ -72,14 +42,13 @@ def setup_snappy(config, windtunnel_data, building_models, quality):
     thirdheight = (analysis_bounds[2][1] - analysis_bounds[2][0]) / 3
 
     snappy_data['includedAngle'] = includedAngle
-    snappy_data['verticalRefinementLevel'] = verticalRefinementLevel
-    snappy_data['insideRefinementLevel'] = insideRefinementLevel
+    snappy_data['verticalRefinementLevel'] = snappy_cfg.verticalDomainRefinement
+    snappy_data['insideRefinementLevel'] = snappy_cfg.CentralRefinement
     snappy_data['verticalCentralRefinement'] = verticalCentralRefinement
-    snappy_data['nCellsBetweenLevels'] = nCellsBetweenLevels
-    snappy_data['nSurfaceLayers'] = nSurfaceLayers
+    snappy_data['nCellsBetweenLevels'] = snappy_cfg.CellsBetweenLevels
+    snappy_data['nSurfaceLayers'] = snappy_cfg.SurfaceLayers
 
-    analysis_area_buffer = get_value(config, "urbafoam.postprocess", "sampleBuffer")
-    analysis_area_buffer *= 1.5
+    analysis_area_buffer = sample_buffer * 1.5
     snappy_data['analysis_minx'] = analysis_bounds[0][0] - analysis_area_buffer
     snappy_data['analysis_maxx'] = analysis_bounds[0][1] + analysis_area_buffer
     snappy_data['analysis_miny'] = analysis_bounds[1][0] - analysis_area_buffer

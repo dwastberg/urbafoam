@@ -1,16 +1,37 @@
 __version__ = "0.1.0"
 
-import os
-import sys
+import logging
 from pathlib import Path
 
 import click
+from pydantic import ValidationError
 
-from .Config import load_config, save_config_file, get_or_update_config, merge_configs, get_value,set_value
-from .DataIO import writeWindPoints, writeWindVectors
-from .Enums import Quality
+from .Config import ConfigError, load_config, save_config
+from .DataIO import output_extension, writeWindPoints, writeWindVectors
+from .Paths import case_dir_name
 from .PostProcess import write_oriented_data, find_sample_points_with_data, normalize_oriented_data, orient_sample_date
 from .SetupCase import setupCase
+
+logger = logging.getLogger(__name__)
+
+_existing_file = click.Path(exists=True, dir_okay=False, path_type=Path)
+
+
+def _load(config_file, case_dir, quality=None):
+    try:
+        return load_config(config_file, case_dir, quality=quality)
+    except ConfigError as e:
+        raise click.ClickException(str(e)) from e
+
+
+def _parse_wind_directions(ctx, param, value):
+    if value is None:
+        return None
+    try:
+        directions = [float(w) for w in value.split(',')]
+    except ValueError:
+        raise click.BadParameter(f"expected comma separated numbers, e.g. '0,90,180,270', got '{value}'")
+    return [int(w) if w.is_integer() else w for w in directions]
 
 
 @click.group()
@@ -18,149 +39,94 @@ def cli():
     """
     Tool for generating and postprocessing OpenFoam cases for analysing urban wind comfort
     """
-    pass
+    logging.basicConfig(level=logging.WARNING, format="%(message)s")
+    logging.getLogger(__name__).setLevel(logging.INFO)
 
 
 @cli.command()
-@click.option('-q', '--quality')
-@click.option('-w', '--wind-dir')
-@click.option('-m', '--model', type=click.Path())
-@click.option('-r', '--surround', type=click.Path())
-@click.option('-h', '--height')
-@click.option('-s', '--sample-points', type=click.Path())
-@click.option('-z',type=float)
-@click.option('-t','--modeltype')
-@click.option('-p', type=int)
-@click.option('-c', '--config', type=click.Path())
-@click.argument('outdir', type=click.Path())
+@click.option('-q', '--quality', type=click.Choice(['quick', 'q', 'normal', 'n'], case_sensitive=False))
+@click.option('-w', '--wind-dir', callback=_parse_wind_directions, help="Comma separated wind directions in degrees")
+@click.option('-m', '--model', type=_existing_file, help="Building model: stl/obj/ply or footprints (shp/geojson/gpkg)")
+@click.option('-r', '--surround', type=_existing_file, help="Model of the surrounding buildings")
+@click.option('-h', '--height', help="Height attribute of building footprints")
+@click.option('-s', '--sample-points', type=_existing_file)
+@click.option('-z', type=float, help="Terrain roughness length z0 in m")
+@click.option('-t', '--modeltype', help="Terrain type, e.g. urban or suburb (ignored if -z is given)")
+@click.option('-p', type=click.IntRange(min=1), help="Number of processes per case")
+@click.option('-c', '--config', type=_existing_file)
+@click.argument('outdir', type=click.Path(file_okay=False, path_type=Path))
 def setup(quality, config, wind_dir, model, surround, height, sample_points, z, modeltype, p, outdir):
     """
     Setup and Generate OpenFoam case files
     """
-    if outdir is None:
-        outdir = os.getcwd()
-    outdir = Path(outdir).expanduser().absolute()
-    print(outdir)
-    config = load_config(config, outdir)
+    outdir = outdir.expanduser().absolute()
+    logger.info(f"Setting up cases in {outdir}")
+    cfg, doc = _load(config, outdir, quality=quality)
 
-    if wind_dir is not None:
-        wind_directions = wind_dir.split(',')
-        try:
-            wind_directions = [float(w.strip()) for w in wind_directions]
-            get_or_update_config(config, "urbafoam.wind", "wind_directions", wind_directions, True)
-        except:
-            sys.exit(f"failed to parse wind directions {wind_dir}")
+    try:
+        if wind_dir is not None:
+            cfg.wind.wind_directions = wind_dir
+        if model is not None:
+            cfg.models.primary_buildings = str(model.expanduser().absolute())
+        if surround is not None:
+            cfg.models.surrounding_buildings = str(surround.expanduser().absolute())
+        if height is not None:
+            cfg.models.height_attribute = height
+        if z is not None:
+            cfg.initial_conditions.z0 = z
+        elif modeltype is not None:
+            cfg.initial_conditions.z0 = modeltype
+        if p is not None:
+            cfg.parallel.procs = p
+        if sample_points is not None:
+            cfg.postprocess.samplePoints = str(sample_points.expanduser().absolute())
+    except ValidationError as e:
+        raise click.ClickException(str(e)) from e
 
-    if model is None:
-        model = get_or_update_config(config, "urbafoam.models", "primary_buildings", None)
-    if model is not None:
-        model = Path(model).expanduser()
-        if not model.is_file():
-            raise FileNotFoundError(f"cannot find model {model}")
-        else:
-            set_value(config,"urbafoam.models", "primary_buildings",str(model))
-
-
-    if surround is None:
-        surround = get_or_update_config(config, "urbafoam.models", "surrounding_buildings", None)
-    if surround is not None:
-        surround = Path(surround).expanduser()
-        if not surround.is_file():
-            raise FileNotFoundError(f"cannot find surrounding model {surround}")
-        else:
-            set_value(config,"urbafoam.models", "surrounding_buildings", str(surround))
-
-    if height is not None:
-        height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute", height, True)
-    else:
-        height_attr = get_or_update_config(config, "urbafoam.models", "height_attribute","height")
-
-    if z is not None:
-        z0 = float(z)
-    else:
-        z0 = modeltype
-
-
-
-    if quality is None:
-        quality = get_or_update_config(config, "", "quality", 'quick')
-    else:
-        if quality in ('normal', 'n', 'N', 'Normal', 'quick', 'q', 'Quick', 'Q'):
-            quality = get_or_update_config(config, "", "quality", quality, overwrite=True)
-        else:
-            print(f"unknown quality {quality}, must be eithet '(q)uick' or '(n)ormal'")
-            sys.exit(1)
-
-    if quality in ('normal', 'n', 'N', 'Normal'):
-        quality = Quality.NORMAL
-
-    elif quality in ('quick', 'q', 'Quick', 'Q'):
-        quality = Quality.QUICK
-
-    if p is None:
-        procs = get_or_update_config(config, "urbafoam.parallel", "procs", os.cpu_count() // 2)
-    else:
-        procs = get_or_update_config(config, "urbafoam.parallel", "procs", p, overwrite=True)
-
-    outdir = get_or_update_config(config, "", "out_dir", str(outdir))
-    setupCase(model, surround, quality, z0, procs, sample_points, outdir, config)
+    try:
+        setupCase(cfg, outdir, doc)
+    except ValueError as e:
+        raise click.ClickException(str(e)) from e
 
 
 @cli.command()
-@click.option('-c', '--config', type=click.Path())
-@click.option('-f', '--format')
-@click.argument('casedir', type=click.Path())
+@click.option('-c', '--config', type=_existing_file)
+@click.option('-f', '--format', help="Output format: csv, geojson, shp or gpkg")
+@click.argument('casedir', type=click.Path(exists=True, file_okay=False, path_type=Path))
 def postprocess(config, format, casedir):
     """PostProcess and output CFD results from Urbafoam run"""
-    print("postprocess")
-    casedir = Path(casedir).expanduser()
-    (casedir / 'results').mkdir(exist_ok=True)
-    config = load_config(config, casedir)
-    wind_directions = get_value(config, "urbafoam.wind", "wind_directions")
-    sample_spacing = get_value(config, "urbafoam.postprocess", "sampleSpacing")
-    Uref = get_value(config, "urbafoam.initalconditions", "Uref")
-    get_speedup = get_or_update_config(config, "urbafoam.postprocess", "calcSpeedup", True)
-    offset = get_value(config, "urbafoam.models", "offset")
-
-    scale_vectors = get_or_update_config(config, "urbafoam.postprocess", "scaleVectorsBy", 2.0)
-
-    known_formats = ('csv', 'json', 'geojson', 'shp', 'shape')
+    casedir = casedir.expanduser()
+    logger.info(f"Post-processing {casedir}")
+    cfg, doc = _load(config, casedir)
     if format is not None:
-        format = format.replace('.', '')
-        format = format.lower()
-        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat", format, overwrite=True)
-    else:
-        format = get_or_update_config(config, "urbafoam.postprocess", "outputFormat", 'csv')
+        try:
+            cfg.postprocess.outputFormat = format
+        except ValidationError as e:
+            raise click.BadParameter(str(e), param_hint="'-f'") from e
 
-    if format == 'csv':
-        file_ext = 'csv'
-    elif format in ('shp', 'shape'):
-        file_ext = 'shp'
-    elif format in ('json', 'geojson'):
-        file_ext = 'json'
-    else:
-        raise ValueError(f'output type {format} not recognized. Must be one of {known_formats}')
+    pp = cfg.postprocess
+    wind_directions = cfg.wind.wind_directions
+    Uref = cfg.initial_conditions.Uref
+    offset, crs = cfg.models.offset, cfg.models.crs
+    file_ext = output_extension(pp.outputFormat)
+    (casedir / 'results').mkdir(exist_ok=True)
 
-    WRITE = get_or_update_config(config, "urbafoam.debug", "write_postProcess", False)
-    if WRITE:
-        for w in wind_directions:
-            write_oriented_data(casedir / str(w), 'samplePoints_2m')
-
-    sample_height = get_value(config, "urbafoam.postprocess", "sampleHeights")
-    normalized_data_collection = {}
-    for s in sample_height:
+    for s in pp.sampleHeights:
         sample_name = f'samplePoints_{s}m'
+        if cfg.debug.write_postProcess:
+            for w in wind_directions:
+                write_oriented_data(casedir / case_dir_name(w), sample_name)
 
-        sample_points_with_data = find_sample_points_with_data(casedir, sample_name, sample_spacing, wind_directions,
-                                                               write=WRITE)
+        sample_points_with_data = find_sample_points_with_data(casedir, sample_name, pp.sampleSpacing, wind_directions,
+                                                               write=cfg.debug.write_postProcess)
         base_points, normalized_data = normalize_oriented_data(sample_points_with_data, casedir, wind_directions, Uref,
-                                                               sample_name)
-        normalized_data_collection[sample_name] = (base_points, normalized_data)
+                                                               sample_name, speedup=pp.calcSpeedup)
 
         writeWindPoints(base_points, normalized_data, wind_directions,
-                        casedir / 'results' / f'{sample_name}_U_pts.{file_ext}', format=format,offset=offset)
+                        casedir / 'results' / f'{sample_name}_U_pts.{file_ext}', format=pp.outputFormat,
+                        offset=offset, crs=crs)
         for w in wind_directions:
-            data = orient_sample_date(casedir / str(w), sample_name, field='U', Uref=Uref)
-            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{w}.{file_ext}", scale=scale_vectors,
-                             format=format,offset=offset)
-    save_config_file(casedir, config)
+            data = orient_sample_date(casedir / case_dir_name(w), sample_name, field='U', Uref=Uref)
+            writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{case_dir_name(w)}.{file_ext}",
+                             scale=pp.scaleVectorsBy, format=pp.outputFormat, offset=offset, crs=crs)
+    save_config(cfg, casedir, doc)

@@ -1,0 +1,50 @@
+{
+ "0/constant/triSurface/buildings_small.stl": {
+  "area": 7330.43,
+  "bounds": [
+   [
+    156.363,
+    121.628,
+    0.0
+   ],
+   [
+    194.173,
+    157.883,
+    48.0
+   ]
+  ],
+  "volume": 19543.15
+ },
+ "135/constant/triSurface/buildings_small.stl": {
+  "area": 7330.43,
+  "bounds": [
+   [
+    149.082,
+    113.751,
+    0.0
+   ],
+   [
+    189.954,
+    161.834,
+    48.0
+   ]
+  ],
+  "volume": 19543.15
+ },
+ "data/building_mesh/buildings_small.stl": {
+  "area": 7330.43,
+  "bounds": [
+   [
+    157.14,
+    120.851,
+    0.0
+   ],
+   [
+    193.396,
+    158.66,
+    48.0
+   ]
+  ],
+  "volume": 19543.15
+ }
+}

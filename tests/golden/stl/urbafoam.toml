@@ -1,0 +1,62 @@
+# Config used by the regression tests (old ["urbafoam.*"] section layout on purpose: it must keep loading).
+quality = "quick"
+
+[wind]
+wind_directions = [0, 135]
+
+[parallel]
+procs = 4
+
+[postprocess]
+sampleSpacing = 4.0
+sampleBuffer = 10
+sampleHeights = [2, 10]
+calcSpeedup = true
+scaleVectorsBy = 2.0
+outputFormat = "csv"
+
+[models]
+primary_buildings = "<TESTDATA>/buildings_small.stl"
+height_attribute = "height"
+offset = [0.0, 0.0, 0.0]
+
+[initial_conditions]
+z0 = "urban"
+turbulenceModel = "KE"
+Uref = 10
+Href = 30
+
+[windtunnel]
+cell_size = 10
+z_grading = 2
+inlet_buffer = 4
+outlet_buffer = 8
+height_buffer = 3
+side_buffer = 5
+
+[snappy]
+verticalDomainRefinement = 2
+CentralRefinement = 2
+verticalCentralRefinement = [4, 2]
+CellsBetweenLevels = 2
+SurfaceLayers = 2
+IncludeAngle = 150
+PrimaryFeatureLevel = 4
+SurroundingFeatureLevel = 3
+PrimaryModelRefinementLevel = "(2 4)"
+SurroundingModelRefinementLevel = "(2 2)"
+
+[controls]
+endTime = 800
+deltaT = 2
+writeInterval = 100
+purgeWrite = 1
+
+[scheme]
+gradLimit_U = 1
+gradLimit_p = 1
+gradLimit_k = 1
+gradLimit_eps = 1
+
+[debug]
+write_postProcess = false

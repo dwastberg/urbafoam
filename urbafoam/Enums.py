@@ -24,11 +24,12 @@ class ModelType(Enum):
 modelTypeLookup = {
     'dense': ModelType.DENSE_URBAN,
     'denseurban': ModelType.DENSE_URBAN,
-    'dense_urban': ModelType.URBAN,
+    'dense_urban': ModelType.DENSE_URBAN,
     'urban': ModelType.URBAN,
     'suburb': ModelType.SUBURB,
     'suburban': ModelType.SUBURB,
-    'forset': ModelType.FOREST,
+    'forest': ModelType.FOREST,
+    'forset': ModelType.FOREST,  # misspelling accepted by earlier versions
     'park': ModelType.PARK,
     'field': ModelType.FIELD,
     'water':ModelType.WATER

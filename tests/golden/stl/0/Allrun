@@ -1,0 +1,25 @@
+#!/bin/sh
+cd ${0%/*} || exit 1    # run from this directory
+
+# Source tutorial run functions
+. tools/RunFunctions
+
+[ ! -d 0 ] && cp -r 0.orig 0
+
+cp 0/U_potentialFoam 0/U
+cp 0/k_potentialFoam 0/k
+
+runApplication -o surfaceFeatures
+
+runApplication -o blockMesh -dict constant/polyMesh/blockMeshDict
+runApplication  -o decomposePar -copyZero
+runParallel -o snappyHexMesh -overwrite
+
+runParallel -o potentialFoam
+
+runParallel -o simpleFoam
+
+runParallel  -o postProcess -latestTime -func sampleDict
+
+touch ${PWD##*/}.foam
+# ----------------------------------------------------------------- end-of-file
