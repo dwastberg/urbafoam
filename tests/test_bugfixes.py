@@ -44,6 +44,23 @@ def test_scalar_and_vector_fields_are_rotated_back_consistently(tmp_path):
     np.testing.assert_allclose(u_data[:, 6], [1, 2, 3])
 
 
+def test_combined_set_file_of_openfoam_v2606(tmp_path):
+    """v2606 writes all fields of a set into one `<set>_k_p_U.xy`, columns `x y z k p Ux Uy Uz`."""
+    from urbafoam.PostProcess import load_sample_points
+
+    pts = np.array([[1.0, 2.0, 2.0], [3.0, 4.0, 2.0]])
+    k, p = np.array([0.1, 0.2]), np.array([5.0, 6.0])
+    U = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+    out = tmp_path / "postProcessing" / "sampleDict" / "800"
+    out.mkdir(parents=True)
+    np.savetxt(out / "s_k_p_U.xy", np.column_stack([pts, k, p, U]), delimiter="\t")
+
+    for field, expected in [("k", k[:, None]), ("p", p[:, None]), ("U", U)]:
+        xyz, values = load_sample_points(tmp_path, "s", field)
+        np.testing.assert_allclose(xyz, pts)
+        np.testing.assert_allclose(values, expected)
+
+
 def test_normalize_scalar_field(tmp_path):
     from urbafoam.PostProcess import normalize_oriented_data
 

@@ -44,7 +44,10 @@ def case_dirs(case_dir):
 
 
 def write_fake_results(case_dir, heights=(2, 10)):
-    """Write deterministic OpenFOAM-like sampleDict output (raw .xy, tab separated) for U.
+    """Write deterministic OpenFOAM-like sampleDict output for k, p and U.
+
+    Uses the layout of OpenFOAM v2606's raw set writer: one tab separated `<set>_k_p_U.xy`
+    file per set with columns `x y z k p Ux Uy Uz`.
 
     About 15% of the sample points are dropped (as if inside buildings) and the rest are
     jittered slightly, so the post-processing filtering and interpolation are exercised.
@@ -67,7 +70,10 @@ def write_fake_results(case_dir, heights=(2, 10)):
             ])
             out = wd / "postProcessing" / "sampleDict" / SAMPLE_TIME
             out.mkdir(parents=True, exist_ok=True)
-            np.savetxt(out / f"samplePoints_{h}m_U.xy", np.hstack([pts, u]), delimiter="\t", fmt="%.8g")
+            k = 0.5 + 0.1 * np.cos(pts[:, 0] / 3.0)
+            p = 0.2 * np.sin(pts[:, 1] / 4.0)
+            np.savetxt(out / f"samplePoints_{h}m_k_p_U.xy", np.column_stack([pts, k, p, u]), delimiter="\t",
+                       fmt="%.8g")
 
 
 def run_case(name, out_dir, postprocess_format="csv"):

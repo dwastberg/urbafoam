@@ -13,21 +13,36 @@ def get_latest_time(times):
     return times[max_index]
 
 
+VECTOR_FIELDS = {'U'}
+
+
+def _field_sizes(fields, n_values):
+    sizes = [3 if f in VECTOR_FIELDS else 1 for f in fields]
+    if sum(sizes) != n_values:
+        # older OpenFOAM versions write one file per value type, so all fields in a file have the same size
+        if n_values % len(fields):
+            raise ValueError(f"can't split {n_values} sampled values between the fields {fields}")
+        sizes = [n_values // len(fields)] * len(fields)
+    return sizes
+
+
 def _find_field_file(sample_time_dir, sample_name, field):
     """Locate the raw set file holding `field` and return (path, column slice of the field).
 
-    OpenFOAM's raw set writer writes one file per value type, named after all fields it holds,
-    e.g. `<set>_U.xy` for vectors and `<set>_k_p.xy` for scalars, with columns `x y z <values>`.
+    OpenFOAM's raw set writer names the file after the fields it holds, e.g. `<set>_k_p_U.xy`,
+    with columns `x y z k p Ux Uy Uz` in the same order. (OpenFOAM v8 wrote one file per value
+    type instead: `<set>_k_p.xy` and `<set>_U.xy`.)
     """
     prefix = f"{sample_name}_"
     for f in sorted(sample_time_dir.glob(f"{prefix}*.xy")):
         fields = f.stem[len(prefix):].split('_')
         if field not in fields:
             continue
-        n_cols = np.loadtxt(f, delimiter='\t', max_rows=1, ndmin=1).shape[0]
-        n_components = (n_cols - 3) // len(fields)
-        start = 3 + fields.index(field) * n_components
-        return f, slice(start, start + n_components)
+        n_cols = np.loadtxt(f, max_rows=1, ndmin=1).shape[0]
+        sizes = _field_sizes(fields, n_cols - 3)
+        i = fields.index(field)
+        start = 3 + sum(sizes[:i])
+        return f, slice(start, start + sizes[i])
     raise FileNotFoundError(f"no sampled data for field '{field}' of '{sample_name}' in {sample_time_dir}")
 
 
@@ -39,7 +54,7 @@ def load_sample_points(case_dir, sample_name, field):
         raise FileNotFoundError(f"no sample points found in {sample_dir}. Has the simulation run to completion?")
     max_time = get_latest_time(sample_times)
     sample_file, columns = _find_field_file(sample_dir / max_time, sample_name, field)
-    sample_data = np.loadtxt(sample_file, delimiter='\t', ndmin=2)
+    sample_data = np.loadtxt(sample_file, ndmin=2)
     return sample_data[:, :3], sample_data[:, columns]
 
 
