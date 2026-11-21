@@ -83,9 +83,8 @@ def setupCase(config, out_dir, doc=None):
                      **setup_initial_conditions(config.initial_conditions),
                      **setup_scheme(config.scheme),
                      **setup_samplepoint(sample_points, rot_matrix, buildingMesh.centerpoint, sampling_heights)}
-        case_data['usePotentialFoam'] = quality == Quality.QUICK
+        case_data['usePotentialFoam'] = 'true' if quality == Quality.QUICK else 'false'
         case_data['procCount'] = procs
-        case_data['eachCaseParallel'] = procs > 1
 
         write_case_files(case_data, case_dir)
 
@@ -98,6 +97,13 @@ _renderer = pystache.Renderer(escape=lambda value: value, missing_tags='strict')
 
 
 def write_case_files(case_data, case_dir):
+    """Render the case templates into `case_dir`.
+
+    Most files are static OpenFOAM files that read their values with `#include "caseParameters"`
+    and `$name`. The case specific values live in a few generated files: system/caseParameters,
+    system/buildingModels, system/sampleSets, system/surfaceFeatureExtractDict and the files in
+    0.orig/include.
+    """
     template_dir = Path(__file__).parent / 'templates'
     case_files = [x for x in template_dir.glob('**/*') if x.is_file() and x.name[0] != '_']
     for c in case_files:

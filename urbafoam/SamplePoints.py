@@ -4,8 +4,7 @@ from shapely.geometry import MultiPoint, mapping
 
 def setup_samplepoint(sample_points, rotation_matrix, centerpoint, heights):
     rotated_points = (sample_points - centerpoint).dot(rotation_matrix) + centerpoint
-    sample_data = {'runSample': True,
-                   'pointClouds': []}
+    sample_data = {'pointClouds': []}
     for h in heights:
         name = f'samplePoints_{h}m'
         pts_string = point_array_to_sample_format(rotated_points + np.array([0, 0, h]))

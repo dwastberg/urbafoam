@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  8
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 
@@ -15,23 +15,16 @@ FoamFile
     object          sampleDict;
 }
 
-interpolationScheme	cellPoint;
-setFormat raw;
-type sets;
-libs ("libsampling.so");
+type                sets;
+libs                (sampling);
+
+interpolationScheme cellPoint;
+setFormat           raw;
 
 sets
-(
-{{#pointClouds}}
-    {{name}}
-    {
-        type points;
-        ordered false;
-        axis xyz;
-        points {{samplePoints}}
-    }
-{{/pointClouds}}
-);
+{
+    #include "sampleSets"
+}
 
 fields
 (

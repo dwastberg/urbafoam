@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  5                                |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,8 +14,10 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// https://www.openfoam.com/documentation/cpp-guide/html/guide-meshing-snappyhexmesh-castellation.html
+// https://www.openfoam.com/documentation/guides/latest/doc/guide-meshing-snappyhexmesh.html
 
+#include "caseParameters"
+#include "buildingModels"
 #include "etc/snappyHexMeshDict.cfg"
 
 castellatedMesh on;
@@ -24,94 +26,65 @@ addLayers       off;
 
 geometry
 {
+    $buildingGeometry;
 
-    buildings
+    BoxZ    // ground plane over the whole domain, for refinement by height
     {
-        type triSurfaceMesh;
-        file "buildings.stl";
+        type    searchableBox;
+        min     $domainGroundMin;
+        max     $domainGroundMax;
     }
 
-
-
-    BoxZ  // refinement based on z level over whole domain
+    Box1    // central analysis area
     {
-     type searchableBox;
-     min  (1394565.280977278 4989603.606933245 0.0);
-     max  (1394913.905129311 4989889.206775254 0.0);
+        type    searchableBox;
+        min     $analysisMin;
+        max     $analysisMax;
     }
 
-
-    Box1 // central area
+    Plane1  // ground plane of the central analysis area
     {
-        type searchableBox;
-        min  (1394614.280977278 4989668.606933245 0.0);
-        max  (1394800.905129311 4989824.206775254 16.0);
+        type    searchableBox;
+        min     $analysisMin;
+        max     $analysisGround;
     }
-
-    Plane1 // central area
-    {
-        type searchableBox;
-        min  (1394614.280977278 4989668.606933245 0.0);
-        max  (1394800.905129311 4989824.206775254 0.0);
-    }
-
-
-};
+}
 
 castellatedMeshControls
 {
-
-
-    features
-    (
-      {
-        file  "buildings.eMesh";
-        level 4;
-      }
-    );
+    features $buildingFeatures;
 
     refinementSurfaces
     {
-
-        buildings
-        {
-            level (2 4);
-            patchInfo  { type wall; }
-        }
-
+        $buildingSurfaces;
     }
 
     refinementRegions
     {
+        BoxZ    // vertical refinement throughout the domain
+        {
+            mode    distance;
+            levels  (($verticalRefinementDistance $verticalRefinementLevel));
+        }
 
-     BoxZ  // Vertical throughout domain
-     {
-         mode distance;
-         levels ((5.333333333333333 2));
-     }
+        Box1
+        {
+            mode    inside;
+            levels  ((1e15 $centralRefinementLevel));
+        }
 
-     Box1
-     {
-         mode inside;
-         levels ((1e15 2));
-     }
-
-     Plane1
-     {
-         mode distance;
-         levels ((3 4) (12 2));
-     }
-
+        Plane1
+        {
+            mode    distance;
+            levels  $centralGroundRefinement;
+        }
     }
 
-    locationInMesh (1394566.280977278 4989604.606933245 47.0);
+    locationInMesh $insidePoint;
 }
 
 snapControls
 {
-
-
-
     explicitFeatureSnap    true;
     implicitFeatureSnap    false;
 }
@@ -122,7 +95,7 @@ addLayersControls
     {
         ".*"
         {
-            nSurfaceLayers 2;
+            nSurfaceLayers $nSurfaceLayers;
         }
     }
 
@@ -130,8 +103,6 @@ addLayersControls
     expansionRatio      1.3;
     finalLayerThickness 0.5;
     minThickness        1e-3;
-
-
 }
 
 writeFlags
@@ -140,6 +111,5 @@ writeFlags
     layerSets
     layerFields
 );
-
 
 // ************************************************************************* //

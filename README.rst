@@ -1,9 +1,11 @@
 
 Urbafoam
 ========
-A tool for generating and post processing OpenFOAM cases for urban wind analysis. It had been tested
-on Ubunutu 20.04 and OpenFOAM v8 from https://openfoam.org/. You must have OpenFOAM installed and
-working to use this. Urbafoam is primarily designed for doing quick indicative studies of urban wind comfort
+A tool for generating and post processing OpenFOAM cases for urban wind analysis. The generated cases
+target OpenFOAM v2606 from https://www.openfoam.com/ (the ESI-OpenCFD release; on macOS
+`OpenFOAM.app <https://github.com/gerlero/openfoam-app>`_ works). They are not compatible with the
+OpenFOAM.org (Foundation) releases. You must have OpenFOAM installed and working to use this, and run
+the generated scripts from an OpenFOAM environment. Urbafoam is primarily designed for doing quick indicative studies of urban wind comfort
 and will make certain assumptions and take certain shortcuts to speed up the simulation, and while these should
 work in the general case they might not always be correct in your case. If you're going to be using the results for something important you should get someone that knows CFD to look it over
 
@@ -38,8 +40,17 @@ and it will regenerate the case base on the changes you've made.
 Your out directory will also contain a directory for each wind direction and a script RunAllCases
 runs the simulation for all the wind directions.
 
-Before running RunAllCases it's a good idea to cd into one of the wind directions and run the RunMesh script, which
-loads and meshes the .stl file.
+Each wind direction is a standard OpenFOAM case. Its settings are collected in ``system/caseParameters``
+(domain, mesh refinement, solver controls, number of processes) and ``0.orig/include/ABLConditions``
+(wind profile and roughness), which the other OpenFOAM files read. Edit these to change a single
+case, or edit ``urbafoam.toml`` and rerun ``urbafoam setup`` to regenerate all of them.
+
+Each case is run with ``./Allrun``, or one stage at a time with ``./Allrun mesh``, ``./Allrun solve`` and
+``./Allrun sample``. It runs in parallel when ``nProcs`` is above 1 and stops at the first step that
+fails (see the ``log.*`` files).
+
+Before running RunAllCases it's a good idea to cd into one of the wind directions and run ``./Allrun mesh``,
+which loads and meshes the .stl file.
 If this runs without error you can use `paraview` to view the resulting mesh.  If it looks good you can run RunAllCases
 to run the whole simulation
 

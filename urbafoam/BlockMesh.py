@@ -36,7 +36,7 @@ def setup_windtunnel(windtunnel_cfg, quality, primary_bounds, surrounding_bounds
     z_range = background_maxz - background_minz
 
     windtunnel_data = {}
-    # constant/polyMesh/blockMeshDict is rendered from the templates using these values
+    # written to system/caseParameters, which system/blockMeshDict reads
     windtunnel_data['x_cells'] = int(ceil(x_range / cell_size))
     windtunnel_data['y_cells'] = int(ceil(y_range / cell_size))
     windtunnel_data['z_cells'] = int(ceil(z_range / cell_size))
@@ -48,7 +48,6 @@ def setup_windtunnel(windtunnel_cfg, quality, primary_bounds, surrounding_bounds
     windtunnel_data['background_maxx'] = background_maxx
     windtunnel_data['background_maxy'] = background_maxy
     windtunnel_data['background_maxz'] = background_maxz
-    windtunnel_data['zGround'] = background_minz
 
     return windtunnel_data
 

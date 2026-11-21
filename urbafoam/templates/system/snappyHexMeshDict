@@ -1,9 +1,9 @@
 /*--------------------------------*- C++ -*----------------------------------*\
-| =========                 |                                                 |
-| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  5                                |
-|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
-|    \\/     M anipulation  |                                                 |
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
@@ -14,8 +14,10 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// https://www.openfoam.com/documentation/cpp-guide/html/guide-meshing-snappyhexmesh-castellation.html
+// https://www.openfoam.com/documentation/guides/latest/doc/guide-meshing-snappyhexmesh.html
 
+#include "caseParameters"
+#include "buildingModels"
 #include "etc/snappyHexMeshDict.cfg"
 
 castellatedMesh on;
@@ -24,100 +26,65 @@ addLayers       off;
 
 geometry
 {
+    $buildingGeometry;
 
-    {{#buildingModels}}
-    {{name}}
+    BoxZ    // ground plane over the whole domain, for refinement by height
     {
-        type triSurfaceMesh;
-        file "{{filename}}";
-    }
-    {{/buildingModels}}
-
-
-
-    BoxZ  // refinement based on z level over whole domain
-    {
-     type searchableBox;
-     min  ({{background_minx}} {{background_miny}} {{analysis_minz}});
-     max  ({{background_maxx}} {{background_maxy}} {{analysis_minz}});
+        type    searchableBox;
+        min     $domainGroundMin;
+        max     $domainGroundMax;
     }
 
-
-    Box1 // central area
+    Box1    // central analysis area
     {
-        type searchableBox;
-        min  ({{analysis_minx}} {{analysis_miny}} {{analysis_minz}});
-        max  ({{analysis_maxx}} {{analysis_maxy}} {{analysis_maxz}});
+        type    searchableBox;
+        min     $analysisMin;
+        max     $analysisMax;
     }
 
-    Plane1 // central area
+    Plane1  // ground plane of the central analysis area
     {
-        type searchableBox;
-        min  ({{analysis_minx}} {{analysis_miny}} {{analysis_minz}});
-        max  ({{analysis_maxx}} {{analysis_maxy}} {{analysis_minz}});
+        type    searchableBox;
+        min     $analysisMin;
+        max     $analysisGround;
     }
-
-
-};
+}
 
 castellatedMeshControls
 {
-
-
-    features
-    (
-      {{#buildingModels}}
-      {
-        file  "{{file_basename}}.eMesh";
-        level {{featureLevel}};
-      }
-      {{/buildingModels}}
-    );
+    features $buildingFeatures;
 
     refinementSurfaces
     {
-
-        {{#buildingModels}}
-        {{name}}
-        {
-            level {{refinementLevel}};
-            patchInfo  { type wall; }
-        }
-        {{/buildingModels}}
-
+        $buildingSurfaces;
     }
 
     refinementRegions
     {
+        BoxZ    // vertical refinement throughout the domain
+        {
+            mode    distance;
+            levels  (($verticalRefinementDistance $verticalRefinementLevel));
+        }
 
-     BoxZ  // Vertical throughout domain
-     {
-         mode distance;
-         levels (({{thirdheight}} {{verticalRefinementLevel}}));
-     }
+        Box1
+        {
+            mode    inside;
+            levels  ((1e15 $centralRefinementLevel));
+        }
 
-     Box1
-     {
-         mode inside;
-         levels ((1e15 {{insideRefinementLevel}}));
-     }
-
-     Plane1
-     {
-         mode distance;
-         levels {{verticalCentralRefinement}};
-     }
-
+        Plane1
+        {
+            mode    distance;
+            levels  $centralGroundRefinement;
+        }
     }
 
-    locationInMesh ({{locationInMesh_x}} {{locationInMesh_y}} {{locationInMesh_z}});
+    locationInMesh $insidePoint;
 }
 
 snapControls
 {
-
-
-
     explicitFeatureSnap    true;
     implicitFeatureSnap    false;
 }
@@ -128,7 +95,7 @@ addLayersControls
     {
         ".*"
         {
-            nSurfaceLayers {{nSurfaceLayers}};
+            nSurfaceLayers $nSurfaceLayers;
         }
     }
 
@@ -136,8 +103,6 @@ addLayersControls
     expansionRatio      1.3;
     finalLayerThickness 0.5;
     minThickness        1e-3;
-
-
 }
 
 writeFlags
@@ -146,6 +111,5 @@ writeFlags
     layerSets
     layerFields
 );
-
 
 // ************************************************************************* //

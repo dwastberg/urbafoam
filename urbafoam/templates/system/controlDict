@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  8
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -14,31 +14,33 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     {{application}};
+#include "caseParameters"
 
-libs ("libatmosphericModels.so");
+application     simpleFoam;
 
-startFrom       {{startFrom}};
+libs            (atmosphericModels);
+
+startFrom       latestTime;
 
 startTime       0;
 
 stopAt          endTime;
 
-endTime        {{endTime}};
+endTime         $endTime;
 
-deltaT          {{deltaT}};
+deltaT          $deltaT;
 
 writeControl    runTime;
 
-writeInterval   {{writeInterval}};
+writeInterval   $writeInterval;
 
-purgeWrite      {{purgeWrite}};
+purgeWrite      $purgeWrite;
 
-writeFormat     ascii;
+writeFormat     binary;     // ascii can write subnormal numbers (e.g. 1e-314) that OpenFOAM cannot read back
 
 writePrecision  6;
 
-writeCompression yes;
+writeCompression off;
 
 timeFormat      general;
 
@@ -52,9 +54,6 @@ runTimeModifiable true;
 
 functions
 {
-    {{#controlFunctions}}
-    #include "{{include}}";
-    {{/controlFunctions}}
 }
 
 // ************************************************************************* //

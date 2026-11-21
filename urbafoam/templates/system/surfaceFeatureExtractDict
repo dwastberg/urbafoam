@@ -1,0 +1,41 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      surfaceFeatureExtractDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+{{#buildingModels}}
+{{filename}}
+{
+    extractionMethod    extractFromSurface;
+
+    // Mark edges whose adjacent surface normals are at an angle less than includedAngle as features
+    includedAngle       {{includedAngle}};
+
+    subsetFeatures
+    {
+        nonManifoldEdges    yes;
+        openEdges           yes;
+    }
+
+    trimFeatures
+    {
+        minElem         0;
+        minLen          0;
+    }
+
+    writeObj            yes;
+}
+
+{{/buildingModels}}
+// ************************************************************************* //

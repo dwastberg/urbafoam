@@ -212,7 +212,7 @@ def test_model_file_names_are_safe_in_openfoam_files(tmp_path):
     shutil.copy(TESTDATA / "buildings_small.stl", model)
     case = tmp_path / "case"
     invoke("setup", "-q", "quick", "-w", "270", "-m", model, case)
-    text = (case / "270" / "system" / "surfaceFeaturesDict").read_text()
+    text = (case / "270" / "system" / "surfaceFeatureExtractDict").read_text()
     assert "&amp;" not in text
     # the model is copied into the case under a name that is a valid OpenFOAM word
     assert "Smith___Sons.stl" in text

@@ -38,7 +38,6 @@ def setup_initial_conditions(ic_cfg):
         'turbulentEpsilon': eps,
         'turbulentOmega': omega,
         'Uref': refSpeed,
-        'refSpeed': refSpeed,
         'Href': Href,
         'z0': z0,
         'z0_walls': z0_walls,

@@ -1,25 +1,65 @@
 #!/bin/sh
-cd ${0%/*} || exit 1    # run from this directory
+cd "${0%/*}" || exit 1                              # Run from this directory
+. "${WM_PROJECT_DIR:?}"/bin/tools/RunFunctions      # OpenFOAM run functions
+#------------------------------------------------------------------------------
+# Usage: ./Allrun [mesh] [solve] [sample]      (no arguments runs all three)
+#
+# Runs in parallel when numberOfSubdomains in system/decomposeParDict is above 1
+# (nProcs in system/caseParameters). Stops at the first application that fails;
+# see its log.* file.
+#------------------------------------------------------------------------------
 
-# Source tutorial run functions
-. tools/RunFunctions
+stages="${*:-mesh solve sample}"
+nProcs=$(getNumberOfProcessors)
+usePotentialFoam=$(foamDictionary -entry usePotentialFoam -value system/caseParameters)
 
-[ ! -d 0 ] && cp -r 0.orig 0
+fail()
+{
+    echo "$1 failed, see $PWD/log.$1" 1>&2
+    exit 1
+}
 
-cp 0/U_potentialFoam 0/U
-cp 0/k_potentialFoam 0/k
+# Run an application, in parallel if the case is decomposed
+run()
+{
+    if [ "$nProcs" -gt 1 ]
+    then
+        runParallel -o "$@" || fail "$1"
+    else
+        runApplication -o "$@" || fail "$1"
+    fi
+}
 
-runApplication -o surfaceFeatures
+for stage in $stages
+do
+    case "$stage" in
+    mesh)
+        [ -d 0 ] || cp -r 0.orig 0
+        runApplication -o surfaceFeatureExtract || fail surfaceFeatureExtract
+        runApplication -o blockMesh || fail blockMesh
+        if [ "$nProcs" -gt 1 ]
+        then
+            runApplication -o decomposePar -force -copyZero || fail decomposePar
+        fi
+        run snappyHexMesh -overwrite
+        ;;
+    solve)
+        if [ "$usePotentialFoam" = true ]
+        then
+            run potentialFoam
+        fi
+        run simpleFoam
+        ;;
+    sample)
+        run postProcess -latestTime -func sampleDict
+        ;;
+    *)
+        echo "Unknown stage '$stage': use mesh, solve or sample" 1>&2
+        exit 1
+        ;;
+    esac
+done
 
-runApplication -o blockMesh -dict constant/polyMesh/blockMeshDict
-runApplication  -o decomposePar -copyZero
-runParallel -o snappyHexMesh -overwrite
+touch "${PWD##*/}.foam"
 
-runParallel -o potentialFoam
-
-runParallel -o simpleFoam
-
-runParallel  -o postProcess -latestTime -func sampleDict
-
-touch ${PWD##*/}.foam
-# ----------------------------------------------------------------- end-of-file
+#------------------------------------------------------------------------------

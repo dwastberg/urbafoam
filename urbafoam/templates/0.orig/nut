@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  8
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -35,25 +35,25 @@ boundaryField
 
     wall
     {
-        type            nutkAtmRoughWallFunction;
-        z0              uniform {{z0_walls}};
+        type            atmNutkWallFunction;
+        z0              $z0Walls;
         value           uniform 0.0;
     }
 
     ground 
     {
-        type            nutkAtmRoughWallFunction;
-        z0              uniform {{z0}}; 
+        type            atmNutkWallFunction;
+        z0              $z0;
         value           uniform 0.0;
     }
 
     ".*"
     {
-        type            nutkAtmRoughWallFunction;
-        z0              uniform {{z0_other}}; // other patch roughness than walls.
+        type            atmNutkWallFunction;
+        z0              $z0Other;
         value           uniform 0.0;
     }
 
-    #include    "include/setConstraintTypes"
+    #includeEtc "caseDicts/setConstraintTypes"
 }
 // ************************************************************************* //

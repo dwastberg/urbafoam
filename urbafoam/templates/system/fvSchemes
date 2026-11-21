@@ -1,8 +1,8 @@
 /*--------------------------------*- C++ -*----------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
-   \\    /   O peration     | Website:  https://openfoam.org
-    \\  /    A nd           | Version:  8
+   \\    /   O peration     | Version:  v2606
+    \\  /    A nd           | Website:  www.openfoam.com
      \\/     M anipulation  |
 \*---------------------------------------------------------------------------*/
 FoamFile
@@ -14,6 +14,8 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+#include "caseParameters"
+
 ddtSchemes
 {
     default         steadyState;
@@ -23,10 +25,10 @@ gradSchemes
 {
 
     default         Gauss linear;
-    grad(U)         cellLimited Gauss linear {{gradLimit_U}};
-    grad(p)         cellLimited Gauss linear {{gradLimit_p}};
-    grad(k)         cellLimited Gauss linear {{gradLimit_k}};
-    grad(epsilon)   cellLimited Gauss linear {{gradLimit_epsilon}};
+    grad(U)         cellLimited Gauss linear $gradLimitU;
+    grad(p)         cellLimited Gauss linear $gradLimitP;
+    grad(k)         cellLimited Gauss linear $gradLimitK;
+    grad(epsilon)   cellLimited Gauss linear $gradLimitEpsilon;
 }
 
 divSchemes
