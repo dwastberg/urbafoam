@@ -1,0 +1,29 @@
+:root { font: 16px/1.45 system-ui, sans-serif; color: #1b3440; background: #ebf1f3; }
+* { box-sizing: border-box; }
+body { margin: 0; height: 100dvh; display: flex; flex-direction: column; }
+header { display: flex; gap: 1.25rem; align-items: baseline; background: #173742; color: #d7e5e9; padding: .9rem 1.5rem; }
+header strong { font-size: 1.3rem; color: white; }
+#case { margin-left: auto; font-variant-numeric: tabular-nums; }
+main { flex: 1; display: grid; grid-template-columns: minmax(14rem, 17rem) 1fr; min-height: 0; }
+aside { padding: 1.25rem; background: #fcfdfd; border-right: 1px solid #cbd7da; overflow: auto; }
+nav { display: flex; border: 1px solid #bdced3; border-radius: .45rem; padding: .18rem; }
+button { font: inherit; font-size: .91rem; cursor: pointer; border: 1px solid #acbec3; background: white; color: inherit; border-radius: .32rem; padding: .45rem .65rem; }
+nav button { border: 0; flex: 1 0 auto; }
+button[aria-pressed=true] { background: #205664; color: white; }
+button:disabled { cursor: default; opacity: .6; }
+section { margin: 1.5rem 0; }
+h2 { font-size: .94rem; margin: 0 0 .5rem; }
+label { display: flex; gap: .55rem; align-items: center; padding: .25rem 0; font-size: .91rem; overflow-wrap: anywhere; cursor: pointer; }
+input { accent-color: #176979; width: 1rem; height: 1rem; flex-shrink: 0; }
+small { display: block; margin-top: 1.5rem; color: #48626b; }
+.stage { position: relative; min-height: 0; min-width: 0; }
+#viewport { position: absolute; inset: 0; overflow: hidden; touch-action: none; }
+#notice { position: absolute; top: 1rem; left: 1rem; right: 1rem; margin: auto; width: fit-content; max-width: calc(100% - 2rem); max-height: 75%; overflow: auto; background: #fff; border: 1px solid #b6c6cb; border-radius: .45rem; padding: .65rem 1rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+#retry { margin-left: .6rem; }
+[hidden] { display: none !important; }
+@media (max-width: 620px) {
+  main { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
+  aside { grid-row: 2; max-height: 38dvh; padding: .75rem 1rem; }
+  section { margin: .65rem 0; }
+  small { margin: .5rem 0; }
+}

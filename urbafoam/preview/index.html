@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Urbafoam · Case preview</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header><strong>Urbafoam</strong><span>Case preview</span><span id="case"></span></header>
+  <main>
+    <aside>
+      <nav aria-label="Preview mode">
+        <button id="setup" aria-pressed="true" disabled>Setup</button>
+        <button id="mesh" aria-pressed="false" disabled>Snappy mesh</button>
+      </nav>
+      <section><h2 id="layer-title">Models</h2><div id="layers"></div></section>
+      <section><h2>Scene</h2><div id="guides"></div>
+        <label id="edge-row" hidden><input type="checkbox" id="edges" checked>Face edges</label>
+      </section>
+      <button id="fit" disabled>Fit to buildings</button>
+      <small>Drag to orbit · Shift-drag to pan · Scroll to zoom</small>
+    </aside>
+    <div class="stage">
+      <div id="viewport" aria-label="Interactive 3D case view"></div>
+      <div id="notice" role="status"><span id="message">Loading case…</span>
+        <button id="retry" hidden>Retry</button>
+      </div>
+    </div>
+  </main>
+  <script src="/vtk.js"></script>
+  <script type="module" src="/viewer.js"></script>
+</body>
+</html>

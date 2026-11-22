@@ -1,0 +1,8 @@
+{
+  "name": "urbafoam-preview",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "vtk.js": "^38.1.0"
+  }
+}
