@@ -25,9 +25,21 @@ where `buildings.stl` is a 3d model of the buildings you want to run your wind s
 The model can be a 3D mesh (stl, obj, ply, off, glb/gltf) or building footprints (shp, geojson, gpkg)
 with a height attribute (``--height``, default ``height``). Footprints are extruded and merged into one
 watertight mesh, and their coordinate reference system is kept for the post-processing output.
-Urbafoam assumes that the ground is a plane at height 0 and all buildings are resting on that plane.
-The buildings models must be watertight and error free for the best results. Any problems with the
-meshes can lead to crashes or bad simulation results
+Surrounding buildings (``--surround``) are meshed more coarsely than the primary model.
+
+Urbafoam prepares the models for meshing (the settings are in the ``[models]`` section of ``urbafoam.toml``):
+
+* The ground is a plane at height 0, at the base of the primary model. Models in map coordinates are
+  moved next to the origin (``offset``), and the results are moved back to the coordinates of the model.
+* 3D meshes are repaired: holes filled, triangles oriented outwards and overlapping parts merged.
+  Parts that stay open are reported, as snappyHexMesh can leave cells inside them.
+* Footprints are cleaned up at the finest cell size near the buildings (``min_feature_size``): gaps
+  between neighbouring buildings narrower than half of it are closed, and smaller courtyards and buildings removed.
+* Buildings are extended 1 m below the ground, so they cut through it.
+* Surrounding buildings further than ``surrounding_radius`` from the primary model are left out, and
+  so are those that overlap the primary model.
+
+Watertight, error free models still give the best results.
 
 This will generate set of files and folders in `outdir` with default settings.
 
@@ -47,7 +59,9 @@ case, or edit ``urbafoam.toml`` and rerun ``urbafoam setup`` to regenerate all o
 
 Each case is run with ``./Allrun``, or one stage at a time with ``./Allrun mesh``, ``./Allrun solve`` and
 ``./Allrun sample``. It runs in parallel when ``nProcs`` is above 1 and stops at the first step that
-fails (see the ``log.*`` files).
+fails (see the ``log.*`` files). The mesh stage ends with ``checkMesh`` and warns if the mesh fails its
+quality checks or snappyHexMesh stopped refining at ``maxGlobalCells``. ``urbafoam setup`` prints an
+estimate of the mesh size of each case, and warns when it is above ``maxGlobalCells``.
 
 Before running RunAllCases it's a good idea to cd into one of the wind directions and run ``./Allrun mesh``,
 which loads and meshes the .stl file.

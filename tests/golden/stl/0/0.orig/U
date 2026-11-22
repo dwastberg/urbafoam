@@ -42,15 +42,15 @@ boundaryField
         value           uniform (0 0 0);
     }
 
-    ground {
-        type slip;
+    // rough walls: the shear stress comes from the nut wall functions and their z0
+    ground
+    {
+        type            noSlip;
     }
-
 
     ".*"
     {
-        type            fixedValue;
-        value           uniform ( 0 0 0 );
+        type            noSlip;
     }
     #includeEtc "caseDicts/setConstraintTypes"
 

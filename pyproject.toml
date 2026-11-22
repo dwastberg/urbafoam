@@ -16,6 +16,7 @@ dependencies = [
     "geopandas>=1.2.0",
     "manifold3d>=3.5.5",
     "pydantic>=2.14.4",
+    "networkx>=3.4",
 ]
 
 [project.scripts]

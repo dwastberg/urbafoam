@@ -30,6 +30,30 @@ run()
     fi
 }
 
+# Report the mesh quality. Failed checks are a warning: the solver often copes with a few poor cells.
+check_mesh()
+{
+    if [ "$nProcs" -gt 1 ]
+    then
+        runParallel -o checkMesh
+    else
+        runApplication -o checkMesh
+    fi
+    if grep -q "Failed [0-9]* mesh checks" log.checkMesh
+    then
+        echo "Warning: checkMesh: $(grep -o 'Failed [0-9]* mesh checks' log.checkMesh | tail -1)," \
+             "see $PWD/log.checkMesh" 1>&2
+    elif ! grep -q "Mesh OK" log.checkMesh
+    then
+        fail checkMesh
+    fi
+    if grep -q "cell limit" log.snappyHexMesh 2>/dev/null  # "... since reaching my cell limit of"
+    then
+        echo "Warning: snappyHexMesh reached maxGlobalCells and stopped refining," \
+             "see $PWD/log.snappyHexMesh" 1>&2
+    fi
+}
+
 for stage in $stages
 do
     case "$stage" in
@@ -42,6 +66,7 @@ do
             runApplication -o decomposePar -force -copyZero || fail decomposePar
         fi
         run snappyHexMesh -overwrite
+        check_mesh
         ;;
     solve)
         if [ "$usePotentialFoam" = true ]

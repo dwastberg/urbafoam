@@ -29,6 +29,9 @@ gradSchemes
     grad(p)         cellLimited Gauss linear $gradLimitP;
     grad(k)         cellLimited Gauss linear $gradLimitK;
     grad(epsilon)   cellLimited Gauss linear $gradLimitEpsilon;
+    // unlimited, linearUpwind overshoots where omega changes steeply near walls and drives it
+    // negative, which made kOmegaSST runs diverge
+    grad(omega)     cellLimited Gauss linear $gradLimitOmega;
 }
 
 divSchemes

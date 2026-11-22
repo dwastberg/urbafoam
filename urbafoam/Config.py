@@ -7,7 +7,7 @@ Files from earlier versions (sections like ``["urbafoam.wind"]``) are migrated w
 """
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import tomlkit
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -33,7 +33,18 @@ class ModelsConfig(Section):
     primary_buildings: str | None = None
     surrounding_buildings: str | None = None
     height_attribute: str = "height"
-    offset: list[float] = Field(default_factory=lambda: [0.0, 0.0, 0.0], min_length=3, max_length=3)
+    # Translation applied to the models before meshing; results are moved back to model coordinates.
+    # 'auto' puts the base of the primary model at z = 0 and, for models in map coordinates (more
+    # than 10 km from the origin), moves them next to the origin: STL stores 32 bit floats, which
+    # only resolve 0.5 m at 5000 km.
+    offset: Annotated[list[float], Field(min_length=3, max_length=3)] | Literal['auto'] = 'auto'
+    # Smallest building detail the mesh resolves, in m. Footprint gaps narrower than half of it are
+    # closed, outlines simplified and smaller courtyards and buildings removed. 'auto' uses the finest
+    # cell size near the primary buildings (e.g. 0.625 m for quick), 0 turns the clean-up off.
+    min_feature_size: Annotated[float, Field(ge=0)] | Literal['auto'] = 'auto'
+    # Surrounding buildings further than this from the primary model (in m) are left out. 'auto' keeps
+    # those within (inlet_buffer - 1) primary building heights, so they stay clear of the inlet.
+    surrounding_radius: Annotated[float, Field(gt=0)] | Literal['auto'] = 'auto'
     crs: str | None = None
 
 
@@ -101,6 +112,8 @@ class SnappyConfig(Section):
     SurroundingFeatureLevel: int
     PrimaryModelRefinementLevel: str
     SurroundingModelRefinementLevel: str
+    # snappyHexMesh stops refining, part way through a level, when the mesh reaches this size
+    maxGlobalCells: int = Field(default=20_000_000, gt=0)
 
 
 class ControlsConfig(Section):
@@ -115,6 +128,7 @@ class SchemeConfig(Section):
     gradLimit_p: Number = 1
     gradLimit_k: Number = 1
     gradLimit_eps: Number = 1
+    gradLimit_omega: Number = 1
 
 
 class DebugConfig(Section):

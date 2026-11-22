@@ -4,4 +4,5 @@ def setup_scheme(scheme_cfg):
         'gradLimit_p': scheme_cfg.gradLimit_p,
         'gradLimit_k': scheme_cfg.gradLimit_k,
         'gradLimit_epsilon': scheme_cfg.gradLimit_eps,
+        'gradLimit_omega': scheme_cfg.gradLimit_omega,
     }

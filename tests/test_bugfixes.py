@@ -193,16 +193,16 @@ def test_adjacent_buildings_are_merged_watertight():
     assert mesh.bounds[0].tolist() == pytest.approx([x0, y0, 0])
 
 
-def test_obj_model_is_converted_to_stl(tmp_path):
+def test_obj_model_is_loaded(tmp_path):
     import trimesh
-    from urbafoam.DataConversion import make_building_mesh
+    from urbafoam.DataConversion import load_building_model
 
     box = trimesh.creation.box(extents=(10, 20, 30))
     box.apply_translation([105, 210, 15])
     box.export(tmp_path / "model.obj")
-    stl_file, crs = make_building_mesh(tmp_path / "model.obj", tmp_path)
-    assert stl_file == tmp_path / "model.stl" and crs is None
-    np.testing.assert_allclose(trimesh.load(stl_file).bounds, [[100, 200, 0], [110, 220, 30]])
+    mesh, crs = load_building_model(tmp_path / "model.obj")
+    assert crs is None
+    np.testing.assert_allclose(mesh.bounds, [[100, 200, 0], [110, 220, 30]])
 
 
 def test_model_file_names_are_safe_in_openfoam_files(tmp_path):
@@ -217,3 +217,15 @@ def test_model_file_names_are_safe_in_openfoam_files(tmp_path):
     # the model is copied into the case under a name that is a valid OpenFOAM word
     assert "Smith___Sons.stl" in text
     assert (case / "270" / "constant" / "triSurface" / "Smith___Sons.stl").is_file()
+
+
+def test_initial_turbulence_matches_the_inlet_profile():
+    """k, epsilon and omega start at the inlet profile values at Href (kappa 0.41, Cmu 0.09 as in OpenFOAM)."""
+    from math import log, sqrt
+    from urbafoam.windProfile import turbulenceConstants
+
+    k, eps, omega = turbulenceConstants(30, 1.0, 10)
+    u_star = 0.41 * 10 / log(31)
+    assert k == pytest.approx(u_star ** 2 / sqrt(0.09))
+    assert eps == pytest.approx(u_star ** 3 / (0.41 * 31))
+    assert omega == pytest.approx(eps / (0.09 * k))  # [1/s]: omega = epsilon/(Cmu k)

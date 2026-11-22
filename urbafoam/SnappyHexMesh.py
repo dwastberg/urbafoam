@@ -39,7 +39,9 @@ def setup_snappy(snappy_cfg, sample_buffer, windtunnel_data, building_models):
             'refinementLevel': refinementLevel
         })
 
-    thirdheight = (analysis_bounds[2][1] - analysis_bounds[2][0]) / 3
+    # the models reach below the ground (DataConversion.sink_into_ground): measure from the ground
+    ground = float(windtunnel_data.get('background_minz', 0.0))
+    thirdheight = (analysis_bounds[2][1] - ground) / 3
 
     snappy_data['includedAngle'] = includedAngle
     snappy_data['verticalRefinementLevel'] = snappy_cfg.verticalDomainRefinement
@@ -47,13 +49,14 @@ def setup_snappy(snappy_cfg, sample_buffer, windtunnel_data, building_models):
     snappy_data['verticalCentralRefinement'] = verticalCentralRefinement
     snappy_data['nCellsBetweenLevels'] = snappy_cfg.CellsBetweenLevels
     snappy_data['nSurfaceLayers'] = snappy_cfg.SurfaceLayers
+    snappy_data['maxGlobalCells'] = snappy_cfg.maxGlobalCells
 
     analysis_area_buffer = sample_buffer * 1.5
     snappy_data['analysis_minx'] = analysis_bounds[0][0] - analysis_area_buffer
     snappy_data['analysis_maxx'] = analysis_bounds[0][1] + analysis_area_buffer
     snappy_data['analysis_miny'] = analysis_bounds[1][0] - analysis_area_buffer
     snappy_data['analysis_maxy'] = analysis_bounds[1][1] + analysis_area_buffer
-    snappy_data['analysis_minz'] = analysis_bounds[2][0]
+    snappy_data['analysis_minz'] = ground
     snappy_data['analysis_maxz'] = analysis_bounds[2][1]
     snappy_data['thirdheight'] = thirdheight
 

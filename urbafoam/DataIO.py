@@ -32,11 +32,13 @@ def _write_gis(gdf, out_file, format):
 
 
 def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv', offset=None, crs=None):
+    """`offset` is the translation that was applied to the model: it is subtracted from the
+    points to give them in model coordinates again."""
     format = normalise_format(format)
     basepoints = np.asarray(basepoints, dtype=float)
     if offset is not None:
         assert len(offset) == 3, "Offset must have a length of 3"
-        basepoints = basepoints + np.asarray(offset, dtype=float)
+        basepoints = basepoints - np.asarray(offset, dtype=float)
     values = np.column_stack(data) if len(data) else np.empty((len(basepoints), 0))
 
     if format == 'csv':
@@ -51,13 +53,14 @@ def writeWindPoints(basepoints, data, wind_dirs, out_file, format='csv', offset=
 
 
 def writeWindVectors(data, out_file, scale=1.0, format='csv', offset=None, crs=None):
+    """`offset` is the translation that was applied to the model, see writeWindPoints."""
     format = normalise_format(format)
     data = np.array(data, dtype=float)  # copy: the caller's array is left untouched
     if offset is not None:
         assert len(offset) == 3, "Offset must have a length of 3"
-        offset = np.array(offset)
-        data[:, :3] += offset  # start points
-        data[:, 3:6] += offset  # end points
+        offset = np.array(offset, dtype=float)
+        data[:, :3] -= offset  # start points
+        data[:, 3:6] -= offset  # end points
 
     if scale != 1:
         start_point, end_point = data[:, :3], data[:, 3:6]

@@ -42,9 +42,25 @@ boundaryField
     }
 
 
+    // rough wall functions with the same z0 as nut (see include/ABLConditions)
+    ground
+    {
+        type            atmOmegaWallFunction;
+        z0              $z0;
+        value           $internalField;
+    }
+
+    wall
+    {
+        type            atmOmegaWallFunction;
+        z0              $z0Walls;
+        value           $internalField;
+    }
+
     ".*"
     {
-        type            omegaWallFunction;
+        type            atmOmegaWallFunction;
+        z0              $z0Other;
         value           $internalField;
     }
 

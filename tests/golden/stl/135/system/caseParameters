@@ -39,6 +39,7 @@ centralRefinementLevel     2;
 centralGroundRefinement    ((3 4) (12 2));
 nCellsBetweenLevels        2;
 nSurfaceLayers             2;
+maxGlobalCells             20000000;   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //
 
@@ -54,6 +55,7 @@ gradLimitU      1;
 gradLimitP      1;
 gradLimitK      1;
 gradLimitEpsilon 1;
+gradLimitOmega  1;
 
 // * * * * * * * * * * * * * * * * Parallel  * * * * * * * * * * * * * * * * //
 

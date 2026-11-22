@@ -39,6 +39,7 @@ centralRefinementLevel     {{insideRefinementLevel}};
 centralGroundRefinement    {{verticalCentralRefinement}};
 nCellsBetweenLevels        {{nCellsBetweenLevels}};
 nSurfaceLayers             {{nSurfaceLayers}};
+maxGlobalCells             {{maxGlobalCells}};   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //
 
@@ -54,6 +55,7 @@ gradLimitU      {{gradLimit_U}};
 gradLimitP      {{gradLimit_p}};
 gradLimitK      {{gradLimit_k}};
 gradLimitEpsilon {{gradLimit_epsilon}};
+gradLimitOmega  {{gradLimit_omega}};
 
 // * * * * * * * * * * * * * * * * Parallel  * * * * * * * * * * * * * * * * //
 

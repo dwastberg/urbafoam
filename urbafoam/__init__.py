@@ -9,7 +9,8 @@ from pydantic import ValidationError
 from .Config import ConfigError, load_config, save_config
 from .DataIO import output_extension, writeWindPoints, writeWindVectors
 from .Paths import case_dir_name
-from .PostProcess import write_oriented_data, find_sample_points_with_data, normalize_oriented_data, orient_sample_date
+from .PostProcess import (write_oriented_data, find_sample_points_with_data, normalize_oriented_data,
+                          orient_sample_date, read_model_offset)
 from .SetupCase import setupCase
 
 logger = logging.getLogger(__name__)
@@ -107,7 +108,8 @@ def postprocess(config, format, casedir):
     pp = cfg.postprocess
     wind_directions = cfg.wind.wind_directions
     Uref = cfg.initial_conditions.Uref
-    offset, crs = cfg.models.offset, cfg.models.crs
+    offset = read_model_offset(casedir, wind_directions, cfg.models.offset)
+    crs = cfg.models.crs
     file_ext = output_extension(pp.outputFormat)
     (casedir / 'results').mkdir(exist_ok=True)
 

@@ -12,10 +12,10 @@
 // * * * * * * * * * * * * * * * * Domain  * * * * * * * * * * * * * * * * * //
 
 // background mesh (system/blockMeshDict)
-xMin            1394565.280977278;
-xMax            1394913.905129311;
-yMin            4989603.606933245;
-yMax            4989889.206775254;
+xMin            -137.706059834899;
+xMax            210.91597136850422;
+yMin            -137.2874117282948;
+yMax            148.18232127273862;
 zMin            0;
 zMax            48.0;
 xCells          35;
@@ -26,12 +26,12 @@ zGrading        2;
 // * * * * * * * * * * * * * * * * Meshing * * * * * * * * * * * * * * * * * //
 
 // central analysis area around the primary buildings (system/snappyHexMeshDict)
-analysisMin     (1394614.280977278 4989668.606933245 0.0);
-analysisMax     (1394800.905129311 4989824.206775254 16.0);
-analysisGround  (1394800.905129311 4989824.206775254 0.0);
-domainGroundMin (1394565.280977278 4989603.606933245 0.0);
-domainGroundMax (1394913.905129311 4989889.206775254 0.0);
-insidePoint     (1394566.280977278 4989604.606933245 47.0);
+analysisMin     (-88.70605983489901 -72.28741172829481 0.0);
+analysisMax     (97.91597136850422 83.18232127273862 16.0);
+analysisGround  (97.91597136850422 83.18232127273862 0.0);
+domainGroundMin (-137.706059834899 -137.2874117282948 0.0);
+domainGroundMax (210.91597136850422 148.18232127273862 0.0);
+insidePoint     (-136.706059834899 -136.2874117282948 47.0);
 
 verticalRefinementDistance 5.333333333333333;
 verticalRefinementLevel    2;
@@ -39,6 +39,7 @@ centralRefinementLevel     2;
 centralGroundRefinement    ((3 4) (12 2));
 nCellsBetweenLevels        2;
 nSurfaceLayers             2;
+maxGlobalCells             20000000;   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //
 
@@ -54,6 +55,7 @@ gradLimitU      1;
 gradLimitP      1;
 gradLimitK      1;
 gradLimitEpsilon 1;
+gradLimitOmega  1;
 
 // * * * * * * * * * * * * * * * * Parallel  * * * * * * * * * * * * * * * * //
 

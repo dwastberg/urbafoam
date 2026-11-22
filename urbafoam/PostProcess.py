@@ -16,6 +16,20 @@ def get_latest_time(times):
 VECTOR_FIELDS = {'U'}
 
 
+def read_model_offset(case_dir, wind_directions, default=None):
+    """The translation setup applied to the models, as recorded in the cases' rotation_matrix.json.
+
+    `default` (the configured offset) is used for cases written before the offset was recorded.
+    """
+    for w in wind_directions:
+        rotation_file = case_dir / case_dir_name(w) / 'rotation_matrix.json'
+        if rotation_file.is_file():
+            offset = json.loads(rotation_file.read_text()).get('offset')
+            if offset is not None:
+                return [float(v) for v in offset]
+    return list(default) if isinstance(default, (list, tuple)) else [0.0, 0.0, 0.0]
+
+
 def _field_sizes(fields, n_values):
     sizes = [3 if f in VECTOR_FIELDS else 1 for f in fields]
     if sum(sizes) != n_values:

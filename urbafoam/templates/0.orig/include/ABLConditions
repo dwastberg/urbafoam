@@ -23,7 +23,8 @@ windDirection        (1 0 0);
 zDirection           (0 0 1);
 d                    uniform 0;   // displacement height
 
-// roughness length of the buildings and of other wall patches, for the nut wall functions
+// z0 is also the roughness of the ground patch. Roughness length of the buildings and of other
+// wall patches, for the wall functions of nut, epsilon and omega
 z0Walls              uniform {{z0_walls}};
 z0Other              uniform {{z0_other}};
 

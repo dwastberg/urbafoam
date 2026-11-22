@@ -4,7 +4,6 @@ import re
 from pathlib import Path
 
 import numpy as np
-import trimesh
 from shapely.geometry import MultiPoint
 
 from .Enums import MeshTypes
@@ -12,7 +11,8 @@ from .Enums import MeshTypes
 
 def foam_name(name):
     """`name` as a safe OpenFOAM word: used for the mesh file and patch names in the case."""
-    return re.sub(r'[^A-Za-z0-9_.-]', '_', name)
+    name = re.sub(r'[^A-Za-z0-9_.-]', '_', name)
+    return '_' + name if name[:1].isdigit() else name  # a word cannot start with a digit
 
 
 def rotation_matrix_z(theta):
@@ -32,36 +32,25 @@ def rotation_matrix_z(theta):
 
 
 class BuildingMesh:
-    def __init__(self, mesh_type=MeshTypes.PRIMARY):
-        self.file_name = None
-        self.name = None
-        self.mesh = None
+    """A building model prepared for the case: `mesh` is in case coordinates, i.e. the model
+    coordinates moved by `offset`, with the ground at z = 0."""
+
+    def __init__(self, mesh, name, mesh_type=MeshTypes.PRIMARY, offset=(0.0, 0.0, 0.0)):
+        self.mesh = mesh
+        self.name = foam_name(name)
+        self.file_name = self.name + '.stl'
+        self.type = mesh_type
+        self.offset = [float(v) for v in offset]
         self.rotated_mesh = None
         self.rotated_bounds = None
         self.rotation = 0
-        self.bounds = None
-        self.centerpoint = [0, 0, 0]
-        self.type = mesh_type
-        self.offset = [0, 0, 0]
-
-    def load_mesh(self, mesh_file, offset=None, center_at_zero=False):
-        mesh_file = Path(mesh_file)
-        try:
-            self.mesh = _read_stl(mesh_file)
-        except Exception as e:
-            raise IOError(f"failed to load {mesh_file}, make sure it exists and is in stl format") from e
-
         self.bounds = self.mesh_bounds()
         self.centerpoint = self.mesh_centerpoint()
-        self.offset = list(offset) if offset is not None else [0, 0, 0]
-        self.name = foam_name(mesh_file.stem)
-        self.file_name = self.name + mesh_file.suffix.lower()
-        if center_at_zero:
-            self.offset = [-self.centerpoint[0], -self.centerpoint[1], 0.0]
-        if min(self.offset) != 0 or max(self.offset) != 0:
-            self.mesh.apply_translation(self.offset)
-            self.bounds = self.mesh_bounds()
-            self.centerpoint = self.mesh_centerpoint()
+
+    def save(self, directory):
+        out_file = Path(directory) / self.file_name
+        self.mesh.export(out_file)
+        return out_file
 
     def mesh_bounds(self, mesh=None):
         """Bounds as [(min_x, max_x), (min_y, max_y), (min_z, max_z)] in Python floats."""
@@ -77,10 +66,9 @@ class BuildingMesh:
         return MultiPoint(mesh.vertices[:, :2]).convex_hull
 
     def mesh_centerpoint(self):
-        if self.bounds is None:
-            self.bounds = self.mesh_bounds()
-        (min_x, max_x), (min_y, max_y), (min_z, _) = self.bounds
-        return [min_x + ((max_x - min_x) / 2), min_y + ((max_y - min_y) / 2), min_z]
+        """Centre of the bounding box on the ground; the models are rotated about it."""
+        (min_x, max_x), (min_y, max_y), _ = self.bounds
+        return [min_x + ((max_x - min_x) / 2), min_y + ((max_y - min_y) / 2), 0.0]
 
     def _rotate_mesh(self, rotation):
         self.rotation = rotation  # 270 - wind_direction
@@ -101,8 +89,3 @@ class BuildingMesh:
             json.dump({"rot_matrix": rotation_matrix.tolist(), "centerpoint": list(map(float, self.centerpoint)),
                        'offset': self.offset}, f)
         return rotation_matrix
-
-
-def _read_stl(stl_file):
-    # process=False keeps the triangles exactly as stored (no vertex merging or face removal)
-    return trimesh.load_mesh(stl_file, process=False)

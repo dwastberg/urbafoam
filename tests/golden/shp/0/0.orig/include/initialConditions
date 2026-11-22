@@ -9,8 +9,8 @@
 
 flowVelocity         (0 0 0);
 pressure             0;
-turbulentKE          4.986318102574589;
-turbulentEpsilon     0.14052088269930735;
-turbulentOmega       3.7174836692938453;
+turbulentKE          4.751701094346872;
+turbulentEpsilon     0.1339090724589204;
+turbulentOmega       0.3131254583010349;
 
 // ************************************************************************* //

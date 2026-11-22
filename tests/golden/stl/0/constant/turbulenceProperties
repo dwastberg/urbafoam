@@ -25,6 +25,16 @@ RAS
     turbulence      on;
 
     printCoeffs     on;
+
+    // Keep the inlet wind profile from decaying over flat ground (Hargreaves & Wright 2007,
+    // J. Wind Eng. Ind. Aerodyn. 95:355-369): sigmaEps = kappa^2/((C2 - C1)*sqrt(Cmu))
+    // = 0.41^2/((1.92 - 1.44)*0.3) = 1.17, with kappa = 0.41 as used by the inlet and wall
+    // functions. Only read by kEpsilon; kOmegaSST's default coefficients already satisfy
+    // the equivalent condition.
+    kEpsilonCoeffs
+    {
+        sigmaEps    1.17;
+    }
 }
 
 // ************************************************************************* //

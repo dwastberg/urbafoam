@@ -18,7 +18,9 @@ outputFormat = "csv"
 [models]
 primary_buildings = "<TESTDATA>/buildings.shp"
 height_attribute = "height"
-offset = [0.0, 0.0, 0.0]
+offset = "auto"
+min_feature_size = "auto"
+surrounding_radius = "auto"
 crs = "EPSG:3003"
 
 [initial_conditions]
@@ -46,6 +48,7 @@ PrimaryFeatureLevel = 4
 SurroundingFeatureLevel = 3
 PrimaryModelRefinementLevel = "(2 4)"
 SurroundingModelRefinementLevel = "(2 2)"
+maxGlobalCells = 20000000
 
 [controls]
 endTime = 800
@@ -58,6 +61,7 @@ gradLimit_U = 1
 gradLimit_p = 1
 gradLimit_k = 1
 gradLimit_eps = 1
+gradLimit_omega = 1
 
 [debug]
 write_postProcess = false
