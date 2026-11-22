@@ -63,10 +63,40 @@ fails (see the ``log.*`` files). The mesh stage ends with ``checkMesh`` and warn
 quality checks or snappyHexMesh stopped refining at ``maxGlobalCells``. ``urbafoam setup`` prints an
 estimate of the mesh size of each case, and warns when it is above ``maxGlobalCells``.
 
+The ``[snappy]`` preset refines the outer domain to level 1 in ``quick`` and level 2 in ``normal``.
+The central ground bands extend to 3 m and 12 m, with levels ``[4, 3]`` in ``quick`` and ``[5, 3]``
+in ``normal``. Set ``resolveFeatureAngle = 30`` for finer capture of curved surfaces where the
+surface refinement has different minimum and maximum levels. The default is 180 degrees.
+Set ``addLayers = true`` to request ``SurfaceLayers`` layers on the ground and building walls.
+Layers are disabled by default. When rerunning setup with the same preset, values in the saved
+config take precedence over its defaults.
+
 Before running RunAllCases it's a good idea to cd into one of the wind directions and run ``./Allrun mesh``,
 which loads and meshes the .stl file.
-If this runs without error you can use `paraview` to view the resulting mesh.  If it looks good you can run RunAllCases
-to run the whole simulation
+Inspect the resulting mesh with the optional browser preview below or with ParaView.
+If it looks good you can run RunAllCases to run the whole simulation.
+
+Optional browser preview
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install the viewer once from the repository root and open one generated wind-direction case::
+
+    npm --prefix urbafoam/preview ci
+    uv run urbafoam preview testcase1/270
+
+The Setup tab opens immediately after case generation. It displays the case-local building
+surfaces, wind tunnel, wind direction and optional central refinement box. Drag to orbit,
+Shift-drag to pan, or scroll to zoom. Use **Fit to buildings** to return to the primary model.
+
+For the **Snappy mesh** tab, launch the preview from an OpenFOAM environment and run
+``./Allrun mesh`` in the case directory. Select the tab (or **Retry** if it was already open)
+to inspect the snapped boundary. The camera stays in place as you switch tabs. Toggle
+individual patches and face edges to compare the snapped surfaces with the setup geometry.
+
+The viewer uses ``foamToVTK`` on demand and serves boundary geometry on localhost. Parallel
+cases use the processor count recorded by snappyHexMesh. Temporary exports are discarded
+when the preview closes. Use ``--no-browser`` to print the URL without launching a browser.
+The other Urbafoam commands work without npm or the viewer dependencies.
 
 Once all the cases have run successfully you can run
 

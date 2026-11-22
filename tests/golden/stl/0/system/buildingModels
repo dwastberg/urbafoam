@@ -33,4 +33,12 @@ buildingSurfaces
     }
 }
 
+buildingLayers
+{
+    buildings_small
+    {
+        nSurfaceLayers $nSurfaceLayers;
+    }
+}
+
 // ************************************************************************* //

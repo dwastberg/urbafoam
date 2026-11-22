@@ -140,3 +140,8 @@ cython_debug/
 #IDE
 .idea/
 /scratch/
+
+# Installed only for the optional browser viewer
+/urbafoam/preview/node_modules/
+
+testcase*/

@@ -106,8 +106,10 @@ class SnappyConfig(Section):
     CentralRefinement: int
     verticalCentralRefinement: list[int] = Field(min_length=2, max_length=2)
     CellsBetweenLevels: int
-    SurfaceLayers: int
-    IncludeAngle: Number
+    addLayers: bool = False
+    SurfaceLayers: int = Field(ge=0)
+    IncludeAngle: Number = 150
+    resolveFeatureAngle: Annotated[Number, Field(ge=0, le=180)] = 180
     PrimaryFeatureLevel: int
     SurroundingFeatureLevel: int
     PrimaryModelRefinementLevel: str
@@ -140,8 +142,8 @@ QUALITY_DEFAULTS = {
         'initial_conditions': {'turbulenceModel': 'KE'},
         'windtunnel': {'inlet_buffer': 4, 'outlet_buffer': 8, 'height_buffer': 3},
         'snappy': {
-            'verticalDomainRefinement': 2, 'CentralRefinement': 2, 'verticalCentralRefinement': [4, 2],
-            'CellsBetweenLevels': 2, 'SurfaceLayers': 2, 'IncludeAngle': 150,
+            'verticalDomainRefinement': 1, 'CentralRefinement': 2, 'verticalCentralRefinement': [4, 3],
+            'CellsBetweenLevels': 2, 'SurfaceLayers': 2,
             'PrimaryFeatureLevel': 4, 'SurroundingFeatureLevel': 3,
             'PrimaryModelRefinementLevel': '(2 4)', 'SurroundingModelRefinementLevel': '(2 2)',
         },
@@ -152,7 +154,7 @@ QUALITY_DEFAULTS = {
         'windtunnel': {'inlet_buffer': 6, 'outlet_buffer': 12, 'height_buffer': 6},
         'snappy': {
             'verticalDomainRefinement': 2, 'CentralRefinement': 3, 'verticalCentralRefinement': [5, 3],
-            'CellsBetweenLevels': 3, 'SurfaceLayers': 3, 'IncludeAngle': 170,
+            'CellsBetweenLevels': 3, 'SurfaceLayers': 3,
             'PrimaryFeatureLevel': 5, 'SurroundingFeatureLevel': 3,
             'PrimaryModelRefinementLevel': '(3 3)', 'SurroundingModelRefinementLevel': '(2 3)',
         },

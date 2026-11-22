@@ -38,7 +38,9 @@ verticalRefinementLevel    {{verticalRefinementLevel}};
 centralRefinementLevel     {{insideRefinementLevel}};
 centralGroundRefinement    {{verticalCentralRefinement}};
 nCellsBetweenLevels        {{nCellsBetweenLevels}};
+addSurfaceLayers           {{addSurfaceLayers}};
 nSurfaceLayers             {{nSurfaceLayers}};
+surfaceResolveFeatureAngle {{resolveFeatureAngle}};
 maxGlobalCells             {{maxGlobalCells}};   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //

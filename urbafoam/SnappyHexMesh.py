@@ -48,7 +48,9 @@ def setup_snappy(snappy_cfg, sample_buffer, windtunnel_data, building_models):
     snappy_data['insideRefinementLevel'] = snappy_cfg.CentralRefinement
     snappy_data['verticalCentralRefinement'] = verticalCentralRefinement
     snappy_data['nCellsBetweenLevels'] = snappy_cfg.CellsBetweenLevels
+    snappy_data['addSurfaceLayers'] = str(snappy_cfg.addLayers).lower()
     snappy_data['nSurfaceLayers'] = snappy_cfg.SurfaceLayers
+    snappy_data['resolveFeatureAngle'] = snappy_cfg.resolveFeatureAngle
     snappy_data['maxGlobalCells'] = snappy_cfg.maxGlobalCells
 
     analysis_area_buffer = sample_buffer * 1.5

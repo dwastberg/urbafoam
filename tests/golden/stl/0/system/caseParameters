@@ -34,11 +34,13 @@ domainGroundMax (578.1725006103516 246.39078521728516 0.0);
 insidePoint     (-34.636505126953125 34.12021636962892 143.0);
 
 verticalRefinementDistance 16.0;
-verticalRefinementLevel    2;
+verticalRefinementLevel    1;
 centralRefinementLevel     2;
-centralGroundRefinement    ((3 4) (12 2));
+centralGroundRefinement    ((3 4) (12 3));
 nCellsBetweenLevels        2;
+addSurfaceLayers           false;
 nSurfaceLayers             2;
+surfaceResolveFeatureAngle 180;
 maxGlobalCells             20000000;   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //

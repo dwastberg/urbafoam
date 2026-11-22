@@ -38,12 +38,14 @@ height_buffer = 3
 side_buffer = 5
 
 [snappy]
-verticalDomainRefinement = 2
+verticalDomainRefinement = 1
 CentralRefinement = 2
-verticalCentralRefinement = [4, 2]
+verticalCentralRefinement = [4, 3]
 CellsBetweenLevels = 2
+addLayers = false
 SurfaceLayers = 2
 IncludeAngle = 150
+resolveFeatureAngle = 180
 PrimaryFeatureLevel = 4
 SurroundingFeatureLevel = 3
 PrimaryModelRefinementLevel = "(2 4)"

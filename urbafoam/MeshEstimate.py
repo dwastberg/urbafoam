@@ -1,9 +1,9 @@
 """Rough estimate of the number of cells snappyHexMesh will make for a case.
 
 The refinement regions of system/snappyHexMeshDict are integrated over the (z graded) background
-mesh, and shells of refined cells are added around the building surfaces and feature edges. It
-ignores much of what snappy does (e.g. the gradual transitions between levels), so expect it to be
-within a factor of about 1.5: it is meant to catch cases that are far too big before they are run.
+mesh, and shells of refined cells are added around the building surfaces and feature edges. The
+estimate omits gradual refinement transitions and wall layers. It is meant to catch cases that are
+far too big before they are run, so expect it to be within a factor of about 1.5.
 """
 import re
 
@@ -76,7 +76,7 @@ class _Profile:
 
 
 def estimate_cells(windtunnel, snappy, building_models):
-    """Estimated number of cells of the snappyHexMesh mesh, from the case data of setup_windtunnel
+    """Estimated number of cells before wall layer addition, from the case data of setup_windtunnel
     and setup_snappy. `building_models` are the BuildingMesh objects (or None) passed to
     setup_snappy, with their rotated mesh set for this wind direction."""
     n_between = snappy['nCellsBetweenLevels']
@@ -98,8 +98,7 @@ def estimate_cells(windtunnel, snappy, building_models):
     models = [m for m in building_models if m is not None]
     for model, settings in zip(models, snappy['buildingModels']):
         mesh = model.rotated_mesh
-        # the max level only applies where the surface curves more than resolveFeatureAngle (180: never)
-        surface_level = parse_levels(settings['refinementLevel'])[0]
+        surface_level, max_surface_level = parse_levels(settings['refinementLevel'])
         feature_level = settings['featureLevel']
 
         # remove the cells inside the buildings
@@ -125,25 +124,31 @@ def estimate_cells(windtunnel, snappy, building_models):
             finer = region < level
             cells += np.sum(weight * layers / (h0[finer] / 2 ** level) ** 2)
 
-        # and tubes of finer cells along the feature edges
-        mid, length = _feature_edges(mesh, settings['includedAngle'])
+        # approximate explicit feature and curvature refinement as tubes of finer cells
+        mid, length, edge_level = _refinement_edges(
+            mesh, settings['includedAngle'], feature_level, snappy['resolveFeatureAngle'], max_surface_level,
+        )
         keep = mid[:, 2] > 0
-        mid, length = mid[keep], length[keep]
+        mid, length, edge_level = mid[keep], length[keep], edge_level[keep]
         region = np.maximum(profile.level(mid[:, 2], profile.in_analysis_area(mid[:, 0], mid[:, 1])), surface_level)
         h0 = (profile.dx * profile.dy * profile.cell_height(mid[:, 2])) ** (1 / 3)
         cross_section = EDGE_LAYERS * (n_between + 1) ** 2
-        for level in range(1, feature_level + 1):
-            finer = region < level
+        for level in range(surface_level + 1, edge_level.max(initial=0) + 1):
+            finer = (region < level) & (edge_level >= level)
             cells += np.sum(length[finer] * cross_section / (h0[finer] / 2 ** level))
     return max(int(cells), 0)
 
 
-def _feature_edges(mesh, included_angle):
-    """Midpoints and lengths of the edges surfaceFeatureExtract marks as features."""
-    sharp = mesh.face_adjacency_angles > np.radians(180 - included_angle)
-    edges = mesh.face_adjacency_edges[sharp]
-    # open (boundary) edges are features too
-    unique = mesh.edges_sorted[trimesh.grouping.group_rows(mesh.edges_sorted, require_count=1)]
-    edges = np.vstack([edges, unique]) if len(unique) else edges
+def _refinement_edges(mesh, included_angle, feature_level, resolve_angle, max_surface_level):
+    """Estimate edge refinement using the larger of the explicit feature and curvature levels."""
+    angles = mesh.face_adjacency_angles
+    explicit = np.where(angles > np.radians(180 - included_angle), feature_level, 0)
+    curvature = np.where(angles > np.radians(resolve_angle), max_surface_level, 0)
+    levels = np.maximum(explicit, curvature)
+    refined = levels > 0
+    # open (boundary) edges are explicit features too
+    boundary = mesh.edges_sorted[trimesh.grouping.group_rows(mesh.edges_sorted, require_count=1)]
+    edges = np.vstack([mesh.face_adjacency_edges[refined], boundary])
+    levels = np.concatenate([levels[refined], np.full(len(boundary), feature_level)])
     a, b = mesh.vertices[edges[:, 0]], mesh.vertices[edges[:, 1]]
-    return (a + b) / 2, np.linalg.norm(b - a, axis=1)
+    return (a + b) / 2, np.linalg.norm(b - a, axis=1), levels

@@ -22,7 +22,7 @@ FoamFile
 
 castellatedMesh on;
 snap            on;
-addLayers       off;
+addLayers       $addSurfaceLayers;
 
 geometry
 {
@@ -93,10 +93,11 @@ addLayersControls
 {
     layers
     {
-        ".*"
+        ground
         {
             nSurfaceLayers $nSurfaceLayers;
         }
+        $buildingLayers;
     }
 
     relativeSizes       true;

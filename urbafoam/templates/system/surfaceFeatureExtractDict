@@ -19,7 +19,7 @@ FoamFile
 {
     extractionMethod    extractFromSurface;
 
-    // Mark edges whose adjacent surface normals are at an angle less than includedAngle as features
+    // Mark edges where adjacent surface normals differ by more than (180 - includedAngle) degrees.
     includedAngle       {{includedAngle}};
 
     subsetFeatures

@@ -33,4 +33,12 @@ buildingSurfaces
     }
 }
 
+buildingLayers
+{
+    buildings
+    {
+        nSurfaceLayers $nSurfaceLayers;
+    }
+}
+
 // ************************************************************************* //

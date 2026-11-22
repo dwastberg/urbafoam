@@ -132,3 +132,13 @@ def postprocess(config, format, casedir):
             writeWindVectors(data, casedir / 'results' / f"windVectors_{sample_name}_{case_dir_name(w)}.{file_ext}",
                              scale=pp.scaleVectorsBy, format=pp.outputFormat, offset=offset, crs=crs)
     save_config(cfg, casedir, doc)
+
+
+@cli.command()
+@click.argument("case_dir", type=click.Path(exists=True, file_okay=False, path_type=Path))
+@click.option("--no-browser", is_flag=True, help="Print the local URL without opening a browser.")
+def preview(case_dir, no_browser):
+    """Preview one generated wind-direction case in a local browser."""
+    from .preview.server import serve
+
+    serve(case_dir.resolve(), not no_browser)

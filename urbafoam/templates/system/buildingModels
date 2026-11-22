@@ -39,4 +39,14 @@ buildingSurfaces
 {{/buildingModels}}
 }
 
+buildingLayers
+{
+{{#buildingModels}}
+    {{name}}
+    {
+        nSurfaceLayers $nSurfaceLayers;
+    }
+{{/buildingModels}}
+}
+
 // ************************************************************************* //
