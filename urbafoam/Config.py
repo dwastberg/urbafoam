@@ -109,7 +109,7 @@ class SnappyConfig(Section):
     addLayers: bool = False
     SurfaceLayers: int = Field(ge=0)
     IncludeAngle: Number = 150
-    resolveFeatureAngle: Annotated[Number, Field(ge=0, le=180)] = 180
+    resolveFeatureAngle: Annotated[Number, Field(ge=0, le=180)] = 30
     PrimaryFeatureLevel: int
     SurroundingFeatureLevel: int
     PrimaryModelRefinementLevel: str

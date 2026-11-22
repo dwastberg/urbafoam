@@ -40,7 +40,7 @@ centralGroundRefinement    ((3 4) (12 3));
 nCellsBetweenLevels        2;
 addSurfaceLayers           false;
 nSurfaceLayers             2;
-surfaceResolveFeatureAngle 180;
+surfaceResolveFeatureAngle 30;
 maxGlobalCells             20000000;   // snappyHexMesh stops refining at this size
 
 // * * * * * * * * * * * * * * * * Solver  * * * * * * * * * * * * * * * * * //

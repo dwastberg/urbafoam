@@ -72,10 +72,10 @@ def test_changing_quality_updates_defaults_but_keeps_edits(tmp_path):
     assert doc["snappy"]["verticalDomainRefinement"] == 1
     assert doc["snappy"]["verticalCentralRefinement"] == [4, 3]
     assert doc["snappy"]["addLayers"] is False
-    assert doc["snappy"]["resolveFeatureAngle"] == 180
+    assert doc["snappy"]["resolveFeatureAngle"] == 30
     doc["snappy"]["addLayers"] = True
     doc["snappy"]["SurfaceLayers"] = 5  # user edit (quick default is 2, normal default 3)
-    doc["snappy"]["resolveFeatureAngle"] = 30
+    doc["snappy"]["resolveFeatureAngle"] = 180
     (case / "urbafoam.toml").write_text(tomlkit.dumps(doc))
 
     invoke("setup", "-q", "normal", case)
@@ -89,10 +89,10 @@ def test_changing_quality_updates_defaults_but_keeps_edits(tmp_path):
     assert cfg.snappy.IncludeAngle == 150
     assert cfg.snappy.addLayers is True
     assert cfg.snappy.SurfaceLayers == 5
-    assert cfg.snappy.resolveFeatureAngle == 30
+    assert cfg.snappy.resolveFeatureAngle == 180
     params = (case / "0" / "system" / "caseParameters").read_text()
     assert "addSurfaceLayers           true;" in params
-    assert "surfaceResolveFeatureAngle 30;" in params
+    assert "surfaceResolveFeatureAngle 180;" in params
 
 
 def test_copied_case_is_regenerated_in_place(tmp_path):

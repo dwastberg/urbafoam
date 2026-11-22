@@ -65,8 +65,9 @@ estimate of the mesh size of each case, and warns when it is above ``maxGlobalCe
 
 The ``[snappy]`` preset refines the outer domain to level 1 in ``quick`` and level 2 in ``normal``.
 The central ground bands extend to 3 m and 12 m, with levels ``[4, 3]`` in ``quick`` and ``[5, 3]``
-in ``normal``. Set ``resolveFeatureAngle = 30`` for finer capture of curved surfaces where the
-surface refinement has different minimum and maximum levels. The default is 180 degrees.
+in ``normal``. ``resolveFeatureAngle`` defaults to 30 degrees to help snapping capture building
+corners. It also controls where the higher surface refinement level applies when the minimum and
+maximum levels differ.
 Set ``addLayers = true`` to request ``SurfaceLayers`` layers on the ground and building walls.
 Layers are disabled by default. When rerunning setup with the same preset, values in the saved
 config take precedence over its defaults.
