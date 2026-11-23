@@ -3,7 +3,7 @@ name = "urbafoam"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Dag Wästberg", email = "dwastberg@gmail.com" }]
-readme = "README.rst"
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=2.0",
