@@ -59,7 +59,8 @@ case, or edit ``urbafoam.toml`` and rerun ``urbafoam setup`` to regenerate all o
 
 Each case is run with ``./Allrun``, or one stage at a time with ``./Allrun mesh``, ``./Allrun solve`` and
 ``./Allrun sample``. It runs in parallel when ``nProcs`` is above 1 and stops at the first step that
-fails (see the ``log.*`` files). The mesh stage ends with ``checkMesh`` and warns if the mesh fails its
+fails (see the ``log.*`` files). Add ``-v`` or ``--verbose`` (e.g. ``./Allrun -v solve``) to also print
+each step's log to the terminal while it runs. The mesh stage ends with ``checkMesh`` and warns if the mesh fails its
 quality checks or snappyHexMesh stopped refining at ``maxGlobalCells``. ``urbafoam setup`` prints an
 estimate of the mesh size of each case, and warns when it is above ``maxGlobalCells``.
 

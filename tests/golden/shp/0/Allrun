@@ -2,14 +2,24 @@
 cd "${0%/*}" || exit 1                              # Run from this directory
 . "${WM_PROJECT_DIR:?}"/bin/tools/RunFunctions      # OpenFOAM run functions
 #------------------------------------------------------------------------------
-# Usage: ./Allrun [mesh] [solve] [sample]      (no arguments runs all three)
+# Usage: ./Allrun [-v|--verbose] [mesh] [solve] [sample]   (no stages runs all three)
 #
 # Runs in parallel when numberOfSubdomains in system/decomposeParDict is above 1
 # (nProcs in system/caseParameters). Stops at the first application that fails;
-# see its log.* file.
+# see its log.* file. With -v/--verbose, each application's log is also printed
+# to stdout while it runs.
 #------------------------------------------------------------------------------
 
-stages="${*:-mesh solve sample}"
+verbose=false
+stages=
+for arg
+do
+    case "$arg" in
+    -v | --verbose) verbose=true ;;
+    *) stages="$stages $arg" ;;
+    esac
+done
+stages="${stages:-mesh solve sample}"
 nProcs=$(getNumberOfProcessors)
 usePotentialFoam=$(foamDictionary -entry usePotentialFoam -value system/caseParameters)
 
@@ -19,14 +29,45 @@ fail()
     exit 1
 }
 
+# Stop printing the log started by launch, once tail has had time to print its last lines
+tailPid=
+stop_tail()
+{
+    [ -n "$tailPid" ] || return 0
+    sleep 1
+    kill "$tailPid" 2>/dev/null
+    wait "$tailPid" 2>/dev/null
+    tailPid=
+}
+trap stop_tail EXIT
+trap 'exit 130' INT TERM
+
+# launch runApplication|runParallel <application> [args]: run it, overwriting its log.
+# With --verbose, also print the log to stdout while the application runs.
+launch()
+{
+    runner="$1"
+    shift
+    if [ "$verbose" = true ]
+    then
+        : > "log.$1"
+        tail -n +1 -f "log.$1" &
+        tailPid=$!
+    fi
+    "$runner" -o "$@"
+    status=$?
+    stop_tail
+    return $status
+}
+
 # Run an application, in parallel if the case is decomposed
 run()
 {
     if [ "$nProcs" -gt 1 ]
     then
-        runParallel -o "$@" || fail "$1"
+        launch runParallel "$@" || fail "$1"
     else
-        runApplication -o "$@" || fail "$1"
+        launch runApplication "$@" || fail "$1"
     fi
 }
 
@@ -35,9 +76,9 @@ check_mesh()
 {
     if [ "$nProcs" -gt 1 ]
     then
-        runParallel -o checkMesh
+        launch runParallel checkMesh
     else
-        runApplication -o checkMesh
+        launch runApplication checkMesh
     fi
     if grep -q "Failed [0-9]* mesh checks" log.checkMesh
     then
@@ -59,11 +100,11 @@ do
     case "$stage" in
     mesh)
         [ -d 0 ] || cp -r 0.orig 0
-        runApplication -o surfaceFeatureExtract || fail surfaceFeatureExtract
-        runApplication -o blockMesh || fail blockMesh
+        launch runApplication surfaceFeatureExtract || fail surfaceFeatureExtract
+        launch runApplication blockMesh || fail blockMesh
         if [ "$nProcs" -gt 1 ]
         then
-            runApplication -o decomposePar -force -copyZero || fail decomposePar
+            launch runApplication decomposePar -force -copyZero || fail decomposePar
         fi
         run snappyHexMesh -overwrite
         check_mesh

@@ -1,3 +1,10 @@
 #!/bin/sh
-# Kept for compatibility: same as ./Allrun mesh
-exec "${0%/*}"/Allrun mesh
+# Kept for compatibility: same as ./Allrun [-v|--verbose] mesh
+for arg
+do
+    case "$arg" in
+    -v | --verbose) ;;
+    *) echo "Usage: $0 [-v|--verbose]" 1>&2; exit 1 ;;
+    esac
+done
+exec "${0%/*}"/Allrun "$@" mesh

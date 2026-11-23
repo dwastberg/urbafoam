@@ -1,3 +1,10 @@
 #!/bin/sh
-# Kept for compatibility: same as ./Allrun solve sample
-exec "${0%/*}"/Allrun solve sample
+# Kept for compatibility: same as ./Allrun [-v|--verbose] solve sample
+for arg
+do
+    case "$arg" in
+    -v | --verbose) ;;
+    *) echo "Usage: $0 [-v|--verbose]" 1>&2; exit 1 ;;
+    esac
+done
+exec "${0%/*}"/Allrun "$@" solve sample
